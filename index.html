@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>BStudy • Bíblia & Notas iPad (Apple Pencil)</title>
+  
+  <!-- Otimizações Específicas para iPad e iPadOS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BStudy">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#0b1120">
+
+  <link rel="apple-touch-icon" href="icons/app-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icons/app-icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Estilos da Aplicação -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- ======================================================================
+         BARRA SUPERIOR (HEADER UNIFICADO PARA IPAD)
+         ====================================================================== -->
+    <header class="app-header">
+      <!-- Lado Esquerdo: Marca & Navegador de Livros -->
+      <div class="header-left">
+        <div class="app-branding">
+          <div class="app-logo-badge">✝</div>
+          <span>BStudy</span>
+        </div>
+
+        <span class="bible-version-pill" title="Versão em Domínio Público">Almeida Atualizada</span>
+
+        <!-- Botão Seletor de Livro e Capítulo -->
+        <button id="btnOpenBookSelector" class="book-chapter-btn" aria-label="Escolher Livro e Capítulo">
+          <span id="currentBookChapterTitle">João 1</span>
+          <span style="font-size: 11px; opacity: 0.8;">▾</span>
+        </button>
+
+        <!-- Navegação rápida de capítulos -->
+        <div style="display: flex; gap: 4px;">
+          <button id="btnPrevChapter" class="chapter-nav-btn" title="Capítulo Anterior">‹</button>
+          <button id="btnNextChapter" class="chapter-nav-btn" title="Próximo Capítulo">›</button>
+        </div>
+      </div>
+
+      <!-- Centro: Status da Rejeição de Palma & Modos de Visualização -->
+      <div class="header-center">
+        <!-- Indicador de Palma da Mão Rejeitada (Predefinida como Ativa) -->
+        <button id="palmStatusPill" class="palm-status-pill" title="Clique para alternar entre Apple Pencil e Toque com Dedo">
+          <span class="palm-dot"></span>
+          <span class="palm-label">Apple Pencil (Palma Rejeitada)</span>
+        </button>
+
+        <!-- Alternador de Modos de Visão -->
+        <div class="view-switch-group">
+          <button class="view-switch-btn" data-view="bible">📖 Bíblia</button>
+          <button class="view-switch-btn active" data-view="split">🌗 Dividido</button>
+          <button class="view-switch-btn" data-view="notes">📝 Notas</button>
+        </div>
+      </div>
+
+      <!-- Lado Direito: Ações (Exportação, Ecrã Inteiro) -->
+      <div class="header-right">
+        <button id="btnOpenExportModal" class="header-action-btn btn-export" title="Exportar imagem ou PDF">
+          <span>📤</span>
+          <span>Exportar</span>
+        </button>
+
+        <button id="btnFullscreen" class="header-action-btn" title="Ecrã Inteiro">
+          <span>⛶</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         ÁREA DE TRABALHO DIVIDIDA (SPLIT WORKSPACE)
+         ====================================================================== -->
+    <main id="splitWorkspace" class="split-workspace">
+      
+      <!-- PAINEL ESQUERDO: LEITOR DA BÍBLIA SAGRADA -->
+      <section id="biblePanel" class="bible-panel theme-claro">
+        <div class="bible-panel-header">
+          <div class="bible-header-title">
+            <h2 id="bibleHeaderTitle">João 1</h2>
+            <span id="bibleHeaderSubtitle" class="bible-header-subtitle">Novo Testamento • Almeida Atualizada</span>
+          </div>
+
+          <div class="bible-reader-controls">
+            <!-- Alternador de Tema de Leitura (Claro, Marfim, Sépia, Noturno) -->
+            <button id="btnToggleReadingTheme" class="icon-btn-subtle" title="Mudar Tema de Leitura (Claro / Marfim / Sépia / Escuro)">
+              🎨
+            </button>
+          </div>
+        </div>
+
+        <!-- Área de Rolagem do Texto Sagrado -->
+        <div id="bibleScrollContainer" class="bible-content-scroll">
+          <div class="bible-chapter-container">
+            <div id="bibleVersesList">
+              <!-- Versículos carregados dinamicamente via JS -->
+            </div>
+
+            <!-- Navegação rápida no fim do capítulo -->
+            <div class="bible-footer-nav">
+              <button id="footerPrevChapter" class="nav-jump-btn">‹ Capítulo Anterior</button>
+              <button id="footerNextChapter" class="nav-jump-btn">Próximo Capítulo ›</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIVISOR REDIMENSIONÁVEL -->
+      <div id="splitDivider" class="split-divider" title="Arraste para ajustar o espaço entre a Bíblia e as Notas">
+        <div class="divider-handle"></div>
+      </div>
+
+      <!-- PAINEL DIREITO: CADERNO DE NOTAS APPLE PENCIL -->
+      <section id="notesPanel" class="notes-panel">
+        
+        <!-- Barra de Ferramentas do Apple Pencil (Pencil Dock) -->
+        <div class="pencil-toolbar">
+          
+          <!-- Grupo de Ferramentas Principais: Caneta, Marca-texto, Borracha -->
+          <div class="tool-group">
+            <button id="btnToolPen" class="tool-mode-btn active" data-tool="pen" title="Caneta de Caligrafia">
+              ✏️
+            </button>
+            <button id="btnToolHl" class="tool-mode-btn" data-tool="highlighter" title="Marca-Texto Translúcido">
+              🖍️
+            </button>
+            <button id="btnToolEraser" class="tool-mode-btn" data-tool="eraser" title="Borracha Precisa">
+              🧹
+            </button>
+          </div>
+
+          <div class="tool-sep"></div>
+
+          <!-- Três Cores de Caneta Requeridas: Preto, Azul Escuro, Vermelho -->
+          <div id="penColorsGroup" class="tool-group" title="Cores de Caneta">
+            <div class="pen-color-swatch swatch-black active" data-color="black" title="Caneta Preta"></div>
+            <div class="pen-color-swatch swatch-blue" data-color="blue" title="Caneta Azul Escuro"></div>
+            <div class="pen-color-swatch swatch-red" data-color="red" title="Caneta Vermelha"></div>
+          </div>
+
+          <!-- Três Cores de Highlighter Requeridas: Amarelo, Verde, Vermelho Claro -->
+          <div id="hlColorsGroup" class="tool-group" style="display: none;" title="Cores de Marca-Texto">
+            <div class="hl-color-swatch swatch-hl-yellow active" data-color="yellow" title="Marca-Texto Amarelo"></div>
+            <div class="hl-color-swatch swatch-hl-green" data-color="green" title="Marca-Texto Verde"></div>
+            <div class="hl-color-swatch swatch-hl-light-red" data-color="lightRed" title="Marca-Texto Vermelho Claro"></div>
+          </div>
+
+          <div class="tool-sep"></div>
+
+          <!-- Seletor de Espessura do Traço com Slider e Presets -->
+          <div class="stroke-size-dropdown">
+            <button id="btnStrokeSize" class="stroke-size-btn" title="Espessura do Traço">
+              <span id="strokePreviewDot" class="stroke-preview-dot"></span>
+              <span>Espessura</span>
+              <span style="font-size: 9px;">▾</span>
+            </button>
+
+            <!-- Popover de Espessura -->
+            <div id="sizePopover" class="size-popover">
+              <div style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px;">CALIBRAR ESPESSURA</div>
+              <input type="range" id="strokeSizeSlider" min="1" max="24" value="3.5" step="0.5" style="width: 160px; margin-bottom: 12px; accent-color: #2563eb;">
+              <div style="display: flex; gap: 6px;">
+                <button class="size-chip" data-size="1.5" style="flex:1; padding: 4px; font-size: 11px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">Fina</button>
+                <button class="size-chip" data-size="3.5" style="flex:1; padding: 4px; font-size: 11px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">Média</button>
+                <button class="size-chip" data-size="7.0" style="flex:1; padding: 4px; font-size: 11px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">Grossa</button>
+                <button class="size-chip" data-size="12.0" style="flex:1; padding: 4px; font-size: 11px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">Extra</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seletor de Tipo de Papel: Linhas, Quadriculado, Pontilhado, Liso -->
+          <div style="position: relative;">
+            <button id="btnPaperType" class="paper-selector-btn" title="Escolher Tipo de Papel">
+              <span>📄</span>
+              <span id="currentPaperLabel">Linhas</span>
+              <span style="font-size: 9px;">▾</span>
+            </button>
+
+            <!-- Popover de Tipos de Papel -->
+            <div id="paperPopover" class="paper-popover">
+              <div class="paper-option-item active" data-paper="linhas">
+                <span>≡</span> Linhas (Pautado)
+              </div>
+              <div class="paper-option-item" data-paper="quadriculado">
+                <span>▦</span> Quadriculado
+              </div>
+              <div class="paper-option-item" data-paper="pontilhado">
+                <span>⁖</span> Pontilhado
+              </div>
+              <div class="paper-option-item" data-paper="liso">
+                <span>◻</span> Em Branco (Liso)
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-sep"></div>
+
+          <!-- Ações: Desfazer, Refazer, Limpar -->
+          <div class="tool-group">
+            <button id="btnUndo" class="action-icon-btn" title="Desfazer (Cmd+Z)">↶</button>
+            <button id="btnRedo" class="action-icon-btn" title="Refazer (Cmd+Shift+Z)">↷</button>
+            <button id="btnClear" class="action-icon-btn" title="Limpar Página de Notas">🗑️</button>
+          </div>
+
+        </div>
+
+        <!-- Área dos Canvases de Notas (Apple Pencil + Papel) -->
+        <div id="notesCanvasContainer" class="notes-canvas-container">
+          <!-- Injetado dinamicamente pelo ApplePencilEngine:
+               1. Paper Canvas
+               2. Drawing Canvas
+               3. Cursor Ring -->
+        </div>
+
+        <!-- Rodapé com Badge de Persistência -->
+        <div class="notes-footer-badge">
+          <span class="save-indicator-dot"></span>
+          <span id="saveIndicatorText">Guardado</span>
+          <span style="opacity: 0.4;">•</span>
+          <span id="notesChapterBadge">Notas: João 1</span>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ======================================================================
+       MODAL 1: SELETOR DE LIVROS E CAPÍTULOS DA BÍBLIA
+       ====================================================================== -->
+  <div id="bookSelectorModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Navegar na Bíblia Sagrada</h3>
+        <button id="btnCloseBookSelector" class="modal-close-btn">✕</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Abas de Testamento -->
+        <div class="testament-tabs">
+          <button class="testament-tab active" data-testament="todos">Todos (66)</button>
+          <button class="testament-tab" data-testament="AT">Antigo Testamento (39)</button>
+          <button class="testament-tab" data-testament="NT">Novo Testamento (27)</button>
+        </div>
+
+        <!-- Barra de Pesquisa de Livro -->
+        <div class="search-input-wrapper">
+          <span class="search-icon-inside">🔍</span>
+          <input type="text" id="booksSearchInput" class="search-input" placeholder="Pesquisar livro... (ex: Romanos, Salmos, Mateus)">
+        </div>
+
+        <!-- Grade de Livros -->
+        <div id="booksGrid" class="books-grid"></div>
+
+        <!-- Grade de Capítulos do Livro Selecionado -->
+        <div id="chaptersSectionTitle" class="chapters-section-title">Capítulos</div>
+        <div id="chaptersGrid" class="chapters-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL 2: EXPORTAR IMAGEM OU PDF (BÍBLIA + NOTAS)
+       ====================================================================== -->
+  <div id="exportModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Exportar Estudo Bíblico & Notas</h3>
+        <button id="btnCloseExportModal" class="modal-close-btn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size: 14.5px; color: #475569; margin-bottom: 20px;">
+          Gere um documento de alta resolução combinando a página da Bíblia referente ao capítulo e o seu caderno de caligrafia do Apple Pencil.
+        </p>
+
+        <div class="export-options-grid">
+          <!-- Opção 1: Imagem PNG -->
+          <div class="export-option-card selected" data-format="png">
+            <span class="export-icon-large">🖼️</span>
+            <span class="export-option-title">Imagem PNG (Alta Resolução)</span>
+            <span class="export-option-desc">Ideal para fotos no iPad, partilha por Mensagens, AirDrop ou redes sociais.</span>
+          </div>
+
+          <!-- Opção 2: Documento PDF -->
+          <div class="export-option-card" data-format="pdf">
+            <span class="export-icon-large">📄</span>
+            <span class="export-option-title">Documento PDF Formatado</span>
+            <span class="export-option-desc">Perfeito para impressão, arquivamento no app Ficheiros ou Apple Books.</span>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 13.5px; color: #475569;">
+          <strong>Disposição:</strong> Bíblia à esquerda com os versículos formatados + Suas Notas Manuscritas à direita sobre o papel selecionado.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnCancelExport" class="btn-secondary" onclick="document.getElementById('exportModal').classList.remove('open')">Cancelar</button>
+        <button id="btnExecuteExport" class="btn-primary">
+          <span>📤</span>
+          <span>Descarregar / Partilhar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       SCRIPTS (100% OFFLINE & AUTO-CONTIDO)
+       ====================================================================== -->
+  <!-- 1. Dados Completos da Bíblia em Português (Almeida Atualizada - 66 Livros) -->
+  <script src="data/bible-data.js"></script>
+
+  <!-- 2. Biblioteca de Geração de PDF e Captura Canvas -->
+  <script src="js/html2pdf.bundle.min.js"></script>
+
+  <!-- 3. Módulos da Aplicação -->
+  <script src="js/notes-storage.js"></script>
+  <script src="js/pencil-engine.js"></script>
+  <script src="js/bible-engine.js"></script>
+  <script src="js/export-engine.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

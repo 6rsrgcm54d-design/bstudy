@@ -1,0 +1,1103 @@
+/* ==========================================================================
+   BStudy - CSS / iPadOS Human Interface Guidelines Design
+   Bíblia e Caderno de Caligrafia Digital com Apple Pencil
+   ========================================================================== */
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
+  --border-color: #e2e8f0;
+  
+  /* Cores das Canetas Solicitadas */
+  --pen-black: #1a1a1a;
+  --pen-dark-blue: #0c356a;
+  --pen-red: #ba181b;
+
+  /* Cores dos Highlighters Solicitados */
+  --hl-yellow: #facc15;
+  --hl-green: #4ade80;
+  --hl-light-red: #fb7185;
+
+  --toolbar-h: 62px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  position: fixed; /* Evita pull-to-refresh indesejado no Safari do iPad */
+}
+
+/* ==========================================================================
+   ESTRUTURA PRINCIPAL (APP SHELL)
+   ========================================================================== */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #0b1120;
+}
+
+/* Barra Superior Unificada (Header) */
+.app-header {
+  height: var(--toolbar-h);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 50;
+  color: #ffffff;
+}
+
+.header-left, .header-center, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-branding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 19px;
+  color: #f8fafc;
+  letter-spacing: -0.4px;
+}
+
+.app-logo-badge {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+.bible-version-pill {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 3px 8px;
+  border-radius: 20px;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+}
+
+/* Seletor de Livro & Capítulo */
+.book-chapter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 7px 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-chapter-btn:hover, .book-chapter-btn:active {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(0.98);
+}
+
+.chapter-nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.chapter-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Indicador de Palma Rejeitada */
+.palm-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  padding: 6px 13px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.palm-status-pill.touch-mode {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.palm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.palm-status-pill.touch-mode .palm-dot {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+/* Botões de Ação do Header */
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.header-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.header-action-btn.btn-export {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.header-action-btn.btn-export:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+/* Controles de Visão (Bíblia, Dividido, Notas) */
+.view-switch-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.view-switch-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 5px 11px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.view-switch-btn.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+/* ==========================================================================
+   ÁREA DE TRABALHO DIVIDIDA (SPLIT WORKSPACE)
+   ========================================================================== */
+.split-workspace {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - var(--toolbar-h));
+  position: relative;
+  overflow: hidden;
+  background-color: #0f172a;
+}
+
+/* Painel Esquerdo: Leitor da Bíblia */
+.bible-panel {
+  flex: 1;
+  min-width: 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fbfbfd;
+  color: #1e293b;
+  position: relative;
+  transition: flex 0.25s ease-out;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Temas do Leitor da Bíblia */
+.bible-panel.theme-marfim {
+  background: #fbf8f1;
+  color: #292524;
+}
+.bible-panel.theme-sepia {
+  background: #f4ecd8;
+  color: #382716;
+}
+.bible-panel.theme-escuro {
+  background: #18181b;
+  color: #f4f4f5;
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+.bible-panel-header {
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: inherit;
+}
+
+.bible-panel.theme-escuro .bible-panel-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.bible-header-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.bible-header-title h2 {
+  font-family: Georgia, "New York", serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.bible-header-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.bible-panel.theme-escuro .bible-header-subtitle {
+  color: #a1a1aa;
+}
+
+.bible-reader-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn-subtle {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: inherit;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.bible-panel.theme-escuro .icon-btn-subtle {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.icon-btn-subtle:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Área de Rolagem do Texto Bíblico */
+.bible-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 36px 80px 36px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.bible-chapter-container {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.verse-item {
+  position: relative;
+  line-height: 1.85;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.verse-item:hover {
+  background-color: rgba(37, 99, 235, 0.06);
+}
+
+.verse-item.selected {
+  background-color: rgba(250, 204, 21, 0.25);
+  border-left: 3px solid #eab308;
+}
+
+.verse-number {
+  font-size: 0.72em;
+  font-weight: 700;
+  vertical-align: super;
+  color: #2563eb;
+  margin-right: 6px;
+  user-select: none;
+}
+
+.bible-panel.theme-escuro .verse-number {
+  color: #60a5fa;
+}
+
+.verse-text {
+  font-family: Georgia, "New York", serif;
+  font-size: 19px;
+  letter-spacing: -0.1px;
+}
+
+.verse-text.font-sans {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+/* Rodapé de navegação rápida entre capítulos */
+.bible-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.nav-jump-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-jump-btn:hover {
+  background: #2563eb;
+  color: white;
+}
+
+/* Divisor de Tela (Resizer) */
+.split-divider {
+  width: 8px;
+  height: 100%;
+  background-color: #1e293b;
+  cursor: col-resize;
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.split-divider:hover, .split-divider:active {
+  background-color: #38bdf8;
+}
+
+.divider-handle {
+  width: 4px;
+  height: 48px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   PAINEL DIREITO: CADERNO DE NOTAS APPLE PENCIL
+   ========================================================================== */
+.notes-panel {
+  flex: 1;
+  min-width: 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1e293b;
+  position: relative;
+}
+
+/* Barra de Ferramentas Flutuante Apple Pencil (Pencil Dock) */
+.pencil-toolbar {
+  height: 56px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 20;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botões de Seleção de Caneta / Marca-texto / Borracha */
+.tool-mode-btn {
+  background: #f1f5f9;
+  border: 1.5px solid transparent;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: #334155;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.tool-mode-btn:hover {
+  background: #e2e8f0;
+}
+
+.tool-mode-btn.active {
+  background: #ffffff;
+  border-color: #2563eb;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Separador vertical na barra de ferramentas */
+.tool-sep {
+  width: 1px;
+  height: 26px;
+  background-color: #cbd5e1;
+  margin: 0 4px;
+}
+
+/* ==========================================================================
+   CORES DAS CANETAS (PRETO, AZUL ESCURO, VERMELHO)
+   ========================================================================== */
+.pen-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.pen-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.pen-color-swatch.active {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 2.5px #2563eb, 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.swatch-black { background-color: var(--pen-black); }
+.swatch-blue { background-color: var(--pen-dark-blue); }
+.swatch-red { background-color: var(--pen-red); }
+
+/* ==========================================================================
+   CORES DOS HIGHLIGHTERS (AMARELO, VERDE, VERMELHO CLARO)
+   ========================================================================== */
+.hl-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+
+.hl-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.hl-color-swatch.active {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 2px #2563eb, 0 3px 8px rgba(0,0,0,0.25);
+}
+
+.swatch-hl-yellow { background-color: var(--hl-yellow); }
+.swatch-hl-green { background-color: var(--hl-green); }
+.swatch-hl-light-red { background-color: var(--hl-light-red); }
+
+/* Seletor de Espessura */
+.stroke-size-dropdown {
+  position: relative;
+}
+
+.stroke-size-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.stroke-preview-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #1e293b;
+  display: inline-block;
+}
+
+/* Seletor de Papel (Linhas, Quadriculado, Pontilhado, Liso) */
+.paper-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paper-selector-btn:hover {
+  background: #e2e8f0;
+}
+
+/* Botões Undo / Redo / Clear */
+.action-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.action-icon-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.action-icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* Área do Canvas de Notas */
+.notes-canvas-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: calc(100% - 56px);
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+/* Rodapé Flutuante das Notas (Indicador de Página e Capítulo) */
+.notes-footer-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  z-index: 15;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.save-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+/* ==========================================================================
+   MODAIS (SELETOR DE LIVROS, EXPORTAÇÃO, AJUSTES)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: #ffffff;
+  width: 90%;
+  max-width: 680px;
+  max-height: 85vh;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  transform: translateY(20px) scale(0.97);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.open .modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.modal-close-btn {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Modal de Navegação Bíblica */
+.testament-tabs {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.testament-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  font-size: 14px;
+  color: #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.testament-tab.active {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.book-card-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.book-card-item:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.book-card-item.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.has-notes-badge {
+  font-size: 11px;
+  background: #fef08a;
+  color: #854d0e;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.chapters-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 16px 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chapters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.chapter-square-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.2s;
+}
+
+.chapter-square-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.chapter-square-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.chapter-square-btn.has-notes {
+  position: relative;
+}
+
+.chapter-square-btn.has-notes::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+/* Modal de Exportação */
+.export-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.export-option-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.export-option-card:hover {
+  border-color: #93c5fd;
+  background: #f8fafc;
+}
+
+.export-option-card.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.export-icon-large {
+  font-size: 32px;
+}
+
+.export-option-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.export-option-desc {
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #2563eb;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+/* Popover do Seletor de Papel */
+.paper-popover, .size-popover {
+  position: absolute;
+  top: 52px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 40;
+  display: none;
+}
+
+.paper-popover.open, .size-popover.open {
+  display: block;
+}
+
+.paper-option-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: background 0.15s;
+}
+
+.paper-option-item:hover {
+  background: #f1f5f9;
+}
+
+.paper-option-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* ==========================================================================
+   ADAPTAÇÃO RESPONSIVA PARA IPAD EM RETRATO & ECRÃS MENORES
+   ========================================================================== */
+@media (max-width: 900px) {
+  .app-header {
+    padding: 0 10px;
+  }
+  .bible-version-pill {
+    display: none;
+  }
+  .app-branding span {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .split-workspace {
+    flex-direction: column;
+  }
+  .split-divider {
+    display: none;
+  }
+  .bible-panel, .notes-panel {
+    min-width: 100%;
+    width: 100%;
+  }
+  .notes-panel.hidden, .bible-panel.hidden {
+    display: none;
+  }
+}
