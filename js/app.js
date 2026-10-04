@@ -660,7 +660,20 @@ class BStudyApp {
   }
 }
 
-// Iniciar a aplicação quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-  window.bStudyApp = new BStudyApp();
-});
+// Iniciar a aplicação com suporte a todos os estados do DOM
+function startBStudyApp() {
+  if (!window.bStudyApp) {
+    try {
+      window.bStudyApp = new BStudyApp();
+    } catch (e) {
+      console.error('Erro ao instanciar BStudyApp:', e);
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startBStudyApp);
+} else {
+  // Se o documento já carregou quando o script foi executado
+  startBStudyApp();
+}

@@ -10,9 +10,28 @@
  * - Desfazer / Refazer / Limpar
  */
 
+// Polyfill para navegadores mais antigos (Safari no iPadOS)
+if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    const radius = typeof r === 'number' ? r : 8;
+    this.beginPath();
+    this.moveTo(x + radius, y);
+    this.lineTo(x + w - radius, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + radius);
+    this.lineTo(x + w, y + h - radius);
+    this.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+    this.lineTo(x + radius, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - radius);
+    this.lineTo(x, y + radius);
+    this.quadraticCurveTo(x, y, x + radius, y);
+    this.closePath();
+    return this;
+  };
+}
+
 class ApplePencilEngine {
   constructor(canvasContainer, options = {}) {
-    this.container = canvasContainer;
+    this.container = canvasContainer || document.body;
     
     // Configurações de ferramentas
     this.tool = 'pen'; // 'pen', 'highlighter', 'eraser'
@@ -461,19 +480,24 @@ class ApplePencilEngine {
   // GESTÃO DE ESTADOS (UNDO / REDO / CLEAR)
   // =========================================================================
   saveState() {
-    // Truncar histórico posterior ao índice atual se tiver havido undo
-    if (this.historyIndex < this.history.length - 1) {
-      this.history = this.history.slice(0, this.historyIndex + 1);
-    }
+    if (!this.drawCanvas || this.drawCanvas.width <= 0 || this.drawCanvas.height <= 0) return;
+    try {
+      // Truncar histórico posterior ao índice atual se tiver havido undo
+      if (this.historyIndex < this.history.length - 1) {
+        this.history = this.history.slice(0, this.historyIndex + 1);
+      }
 
-    // Salvar snapshot como ImageData
-    const imgData = this.drawCtx.getImageData(0, 0, this.drawCanvas.width, this.drawCanvas.height);
-    this.history.push(imgData);
+      // Salvar snapshot como ImageData
+      const imgData = this.drawCtx.getImageData(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+      this.history.push(imgData);
 
-    if (this.history.length > this.maxHistory) {
-      this.history.shift();
-    } else {
-      this.historyIndex++;
+      if (this.history.length > this.maxHistory) {
+        this.history.shift();
+      } else {
+        this.historyIndex++;
+      }
+    } catch (e) {
+      console.warn('saveState ignorado:', e);
     }
   }
 
