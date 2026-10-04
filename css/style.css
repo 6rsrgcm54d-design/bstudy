@@ -57,28 +57,27 @@ html, body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background-color: #0b1120;
+  background-color: #f8fafc;
 }
 
-/* Barra Superior Unificada (Header) */
+/* Barra Superior Unificada (Header iPadOS) - Nítida, Sólida e Sem Blur */
 .app-header {
-  height: var(--toolbar-h);
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 58px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   z-index: 50;
-  color: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-left, .header-center, .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .app-branding {
@@ -86,32 +85,33 @@ html, body {
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  font-size: 19px;
-  color: #f8fafc;
+  font-size: 18px;
+  color: #0f172a;
   letter-spacing: -0.4px;
 }
 
 .app-logo-badge {
   background: linear-gradient(135deg, #38bdf8, #2563eb);
   color: white;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+  font-size: 15px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
 .bible-version-pill {
   font-size: 11px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.12);
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   padding: 3px 8px;
   border-radius: 20px;
-  color: #94a3b8;
-  letter-spacing: 0.3px;
+  color: #475569;
+  letter-spacing: 0.2px;
 }
 
 /* Seletor de Livro & Capítulo */
@@ -119,40 +119,41 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 7px 16px;
-  border-radius: 12px;
-  font-size: 16px;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1.5px solid #cbd5e1;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s ease;
 }
 
-.book-chapter-btn:hover, .book-chapter-btn:active {
-  background: rgba(255, 255, 255, 0.24);
-  transform: scale(0.98);
+.book-chapter-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 
 .chapter-nav-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 15px;
-  transition: all 0.2s;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.15s ease;
 }
 
 .chapter-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 /* Indicador de Palma Rejeitada */
@@ -160,21 +161,21 @@ html, body {
   display: flex;
   align-items: center;
   gap: 7px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: #ecfdf5;
+  border: 1.5px solid #a7f3d0;
+  color: #065f46;
   padding: 6px 13px;
   border-radius: 20px;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .palm-status-pill.touch-mode {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
 }
 
 .palm-dot {
@@ -182,57 +183,27 @@ html, body {
   height: 8px;
   border-radius: 50%;
   background-color: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .palm-status-pill.touch-mode .palm-dot {
   background-color: #f59e0b;
-  box-shadow: 0 0 8px #f59e0b;
-}
-
-/* Botões de Ação do Header */
-.header-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.header-action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.header-action-btn.btn-export {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border: none;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.header-action-btn.btn-export:hover {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 0 6px #f59e0b;
 }
 
 /* Controles de Visão (Bíblia, Dividido, Notas) */
 .view-switch-group {
   display: flex;
-  background: rgba(0, 0, 0, 0.3);
+  background: #f1f5f9;
   padding: 3px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
 .view-switch-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   padding: 5px 11px;
   border-radius: 7px;
   font-size: 13px;
@@ -241,13 +212,45 @@ html, body {
   display: flex;
   align-items: center;
   gap: 4px;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
 .view-switch-btn.active {
-  background: rgba(255, 255, 255, 0.18);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Botões de Ação do Header */
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+  padding: 6px 13px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-action-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.header-action-btn.btn-export {
+  background: #2563eb;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  border: none;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.header-action-btn.btn-export:hover {
+  background: #1d4ed8;
 }
 
 /* ==========================================================================
@@ -668,6 +671,18 @@ html, body {
   height: calc(100% - 56px);
   overflow: hidden;
   background-color: #ffffff;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
+.notes-drawing-canvas,
+.notes-paper-canvas {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  touch-action: none !important;
 }
 
 /* Rodapé Flutuante das Notas (Indicador de Página e Capítulo) */

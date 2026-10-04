@@ -1,16 +1,15 @@
 /**
- * BStudy - Motor de Caligrafia Digital com Suporte Especializado a Apple Pencil
- * - Rejeição Nativa de Palma da Mão (Palm Rejection Predefinida)
- * - Sensibilidade à Pressão e Curvas Suaves Bézier
+ * BStudy - Motor de Caligrafia Digital Especializado para iPad & Apple Pencil
+ * - Traçado Contínuo de Alta Precisão (Interpolação Bézier sem falhas nem pontilhados)
+ * - Suporte a Eventos Coalescidos de Alta Frequência (Apple Pencil 120Hz/240Hz ProMotion)
+ * - Rejeição Nativa e Estrita da Palma da Mão (Palm Rejection Predefinida)
+ * - Bloqueio Total de Seleção de Texto e Popups Nativos do Safari ("Copiar / Procurar")
  * - 3 Cores de Caneta: Preto, Azul Escuro e Vermelho
- * - Seleção de Espessura com Slider e Presets
- * - 3 Highlighters: Amarelo, Verde e Vermelho Claro (Multiplicação translúcida)
+ * - Seletor de Espessura e 3 Highlighters Translúcidos (Multiply)
  * - Papéis: Linhas, Quadriculado, Pontilhado e Liso
- * - Camadas Separadas: Papel sob os traços (Borracha apaga apenas a tinta, nunca o papel!)
- * - Desfazer / Refazer / Limpar
  */
 
-// Polyfill para navegadores mais antigos (Safari no iPadOS)
+// Polyfill universal para roundRect no Safari
 if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
     const radius = typeof r === 'number' ? r : 8;
@@ -39,15 +38,14 @@ class ApplePencilEngine {
     this.penSize = 3.0; // Espessura normal
     
     this.highlighterColor = '#facc15'; // Amarelo padrão
-    this.highlighterSize = 22.0; // Espessura de marca-texto
-
-    this.eraserSize = 24.0;
+    this.highlighterSize = 24.0; // Espessura de marca-texto
+    this.eraserSize = 26.0;
     
     // Cores oficiais especificadas pelo utilizador:
     this.PEN_COLORS = {
-      black: '#1a1a1a',    // Preto grafite profundo
-      blue: '#0c356a',     // Azul escuro nobre
-      red: '#ba181b'       // Vermelho clássico
+      black: '#1a1a1a',    // Preto tinta profunda
+      blue: '#0c356a',     // Azul escuro clássico
+      red: '#ba181b'       // Vermelho vivo editorial
     };
 
     this.HIGHLIGHTER_COLORS = {
@@ -57,26 +55,29 @@ class ApplePencilEngine {
     };
 
     // Rejeição da Palma da Mão (Predefinida como ATIVA)
-    // Apenas eventos de 'pen' (Apple Pencil) geram traço. Toques acidentais da mão são rejeitados.
+    // Apenas 'pen' desenha; toques com a mão/dedo são ignorados sem riscar a tela!
     this.onlyPenMode = true; 
     this.pressureEnabled = true;
 
     // Tipo de Papel: 'linhas', 'quadriculado', 'pontilhado', 'liso'
     this.paperType = options.paperType || 'linhas';
-    this.paperTheme = options.paperTheme || 'marfim'; // 'branco', 'marfim', 'sepia', 'escuro'
+    this.paperTheme = options.paperTheme || 'marfim';
 
     // Histórico de ações (Undo / Redo)
     this.history = [];
     this.historyIndex = -1;
     this.maxHistory = 30;
 
-    // Estado do traço atual
+    // Estado do traço contínuo
     this.isDrawing = false;
-    this.points = [];
+    this.activePointerId = null;
+    this.lastPoint = null;
+    this.lastMidPoint = null;
     this.hasDrawn = false;
+    this.strokePointsCount = 0;
     this.onChangeCallback = null;
 
-    // Inicialização do DOM e Canvas
+    // Inicialização
     this.setupCanvases();
     this.initSize();
     this.renderPaper();
@@ -90,9 +91,10 @@ class ApplePencilEngine {
     this.container.style.overflow = 'hidden';
     this.container.style.userSelect = 'none';
     this.container.style.webkitUserSelect = 'none';
-    this.container.style.touchAction = 'none'; // Prevenir gestos do navegador na área de escrita
+    this.container.style.touchAction = 'none';
+    this.container.style.webkitTouchCallout = 'none';
 
-    // 1. Canvas do Papel (Fundo)
+    // 1. Canvas de Fundo (Papel com Pautas/Grade)
     this.paperCanvas = document.createElement('canvas');
     this.paperCanvas.className = 'notes-paper-canvas';
     this.paperCanvas.style.position = 'absolute';
@@ -104,7 +106,7 @@ class ApplePencilEngine {
     this.paperCanvas.style.pointerEvents = 'none';
     this.paperCtx = this.paperCanvas.getContext('2d');
 
-    // 2. Canvas de Tinta (Desenho Apple Pencil)
+    // 2. Canvas de Desenho (Apple Pencil)
     this.drawCanvas = document.createElement('canvas');
     this.drawCanvas.className = 'notes-drawing-canvas';
     this.drawCanvas.style.position = 'absolute';
@@ -114,14 +116,17 @@ class ApplePencilEngine {
     this.drawCanvas.style.height = '100%';
     this.drawCanvas.style.zIndex = '2';
     this.drawCanvas.style.cursor = 'crosshair';
+    this.drawCanvas.style.touchAction = 'none';
+    this.drawCanvas.style.webkitTouchCallout = 'none';
+    this.drawCanvas.style.webkitUserSelect = 'none';
     this.drawCtx = this.drawCanvas.getContext('2d', { willReadFrequently: true });
 
-    // 3. Cursor indicador de borracha / ponta
+    // 3. Cursor indicador de Borracha
     this.cursorRing = document.createElement('div');
     this.cursorRing.className = 'pencil-cursor-ring';
     this.cursorRing.style.position = 'absolute';
     this.cursorRing.style.borderRadius = '50%';
-    this.cursorRing.style.border = '1.5px solid rgba(0,0,0,0.4)';
+    this.cursorRing.style.border = '1.5px solid rgba(239, 68, 68, 0.7)';
     this.cursorRing.style.pointerEvents = 'none';
     this.cursorRing.style.display = 'none';
     this.cursorRing.style.zIndex = '10';
@@ -134,30 +139,29 @@ class ApplePencilEngine {
 
   initSize() {
     const rect = this.container.getBoundingClientRect();
-    const dpr = Math.max(window.devicePixelRatio || 1, 2); // 2x ou mais no iPad Retina
+    const dpr = Math.max(window.devicePixelRatio || 1, 2);
 
-    const width = Math.max(rect.width, 300);
-    const height = Math.max(rect.height, 400);
+    const width = Math.max(rect.width || 0, window.innerWidth > 600 ? window.innerWidth / 2 : 400);
+    const height = Math.max(rect.height || 0, window.innerHeight - 120, 500);
 
-    // Salvar estado atual do desenho antes de redimensionar
     let tempCanvas = null;
-    if (this.hasDrawn && this.drawCanvas.width > 0) {
-      tempCanvas = document.createElement('canvas');
-      tempCanvas.width = this.drawCanvas.width;
-      tempCanvas.height = this.drawCanvas.height;
-      tempCanvas.getContext('2d').drawImage(this.drawCanvas, 0, 0);
+    if (this.hasDrawn && this.drawCanvas && this.drawCanvas.width > 0 && this.drawCanvas.height > 0) {
+      try {
+        tempCanvas = document.createElement('canvas');
+        tempCanvas.width = this.drawCanvas.width;
+        tempCanvas.height = this.drawCanvas.height;
+        tempCanvas.getContext('2d').drawImage(this.drawCanvas, 0, 0);
+      } catch (e) {}
     }
 
     this.width = width;
     this.height = height;
     this.dpr = dpr;
 
-    // Configurar canvas do papel
     this.paperCanvas.width = width * dpr;
     this.paperCanvas.height = height * dpr;
     this.paperCtx.scale(dpr, dpr);
 
-    // Configurar canvas de desenho
     this.drawCanvas.width = width * dpr;
     this.drawCanvas.height = height * dpr;
     this.drawCtx.scale(dpr, dpr);
@@ -165,31 +169,47 @@ class ApplePencilEngine {
     this.drawCtx.lineJoin = 'round';
 
     if (tempCanvas) {
-      this.drawCtx.drawImage(tempCanvas, 0, 0, width, height);
+      try {
+        this.drawCtx.drawImage(tempCanvas, 0, 0, width, height);
+      } catch (e) {}
     }
 
     this.renderPaper();
   }
 
   // =========================================================================
-  // GESTÃO DE EVENTOS DE PONTEIRO & REJEIÇÃO DA PALMA DA MÃO
+  // GESTÃO DE EVENTOS E PREVENÇÃO DE MENUS NATIVOS DO SAFARI
   // =========================================================================
   attachEvents() {
-    // Usar Pointer Events nativos do Safari / iPadOS
+    // 1. Bloquear menu nativo de seleção do iOS ("Copiar / Procurar / Traduzir")
+    this.drawCanvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }, { passive: false });
+
+    this.drawCanvas.addEventListener('selectstart', (e) => {
+      e.preventDefault();
+      return false;
+    }, { passive: false });
+
+    // 2. Prevenir gestos nativos de scroll ou pinça com touch no canvas de escrita
+    this.drawCanvas.addEventListener('touchstart', (e) => {
+      if (this.onlyPenMode) return; // Se a palma estiver sendo rejeitada, ignora
+      e.preventDefault();
+    }, { passive: false });
+
+    this.drawCanvas.addEventListener('touchmove', (e) => {
+      if (this.onlyPenMode) return;
+      e.preventDefault();
+    }, { passive: false });
+
+    // 3. Pointer Events do Apple Pencil
     this.drawCanvas.addEventListener('pointerdown', (e) => this.onPointerDown(e), { passive: false });
     this.drawCanvas.addEventListener('pointermove', (e) => this.onPointerMove(e), { passive: false });
     this.drawCanvas.addEventListener('pointerup', (e) => this.onPointerUp(e), { passive: false });
     this.drawCanvas.addEventListener('pointercancel', (e) => this.onPointerUp(e), { passive: false });
     this.drawCanvas.addEventListener('pointerleave', (e) => this.onPointerLeave(e), { passive: false });
-
-    // Prevenir comportamentos indesejados de toque e zoom acidental nativo na área de escrita
-    this.container.addEventListener('touchstart', (e) => {
-      if (this.onlyPenMode) {
-        // Se a rejeição de palma estiver ativa e for toque com dedos, não interfere com o scroll se houver
-        return;
-      }
-      e.preventDefault();
-    }, { passive: false });
 
     window.addEventListener('resize', () => {
       clearTimeout(this.resizeTimeout);
@@ -199,10 +219,19 @@ class ApplePencilEngine {
 
   getPointerPos(e) {
     const rect = this.drawCanvas.getBoundingClientRect();
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    // Normalizar pressão (se o navegador/caneta suportar)
+    let pressure = 0.5;
+    if (e.pressure !== undefined && e.pressure > 0) {
+      pressure = e.pressure;
+    }
+
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      pressure: (e.pressure !== undefined && e.pressure > 0) ? e.pressure : 0.5,
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+      pressure: pressure,
       pointerType: e.pointerType || 'touch'
     };
   }
@@ -212,17 +241,26 @@ class ApplePencilEngine {
 
     // =======================================================================
     // REJEIÇÃO DA PALMA DA MÃO PREDEFINIDA:
-    // Se onlyPenMode estiver ativo, aceita SOMENTE e.pointerType === 'pen'
-    // Toques de dedos (touch) e palma da mão são ignorados sem riscar a tela!
+    // Se onlyPenMode estiver ativo, aceita EXCLUSIVAMENTE o Apple Pencil (pen)
+    // A palma da mão pousada na tela não interfere nem cria riscos!
     // =======================================================================
     if (this.onlyPenMode && pos.pointerType !== 'pen') {
-      // Ignora completamente o toque da palma/dedos para desenho
       return;
     }
 
     e.preventDefault();
+    e.stopPropagation();
+
+    // Capturar o ponteiro para que movimentos rápidos nunca percam eventos
+    try {
+      this.drawCanvas.setPointerCapture(e.pointerId);
+      this.activePointerId = e.pointerId;
+    } catch (err) {}
+
     this.isDrawing = true;
-    this.points = [pos];
+    this.strokePointsCount = 1;
+    this.lastPoint = pos;
+    this.lastMidPoint = { x: pos.x, y: pos.y };
 
     if (this.tool === 'eraser') {
       this.updateCursorRing(pos);
@@ -231,40 +269,60 @@ class ApplePencilEngine {
   }
 
   onPointerMove(e) {
-    const pos = this.getPointerPos(e);
+    if (!this.isDrawing) return;
 
-    // Rejeição da Palma
-    if (this.onlyPenMode && pos.pointerType !== 'pen') {
+    // Se estiver no modo apenas caneta, ignorar toques da palma
+    if (this.onlyPenMode && e.pointerType !== 'pen') {
       return;
     }
 
-    if (this.tool === 'eraser') {
-      this.updateCursorRing(pos);
+    // Se houver um ponteiro ativo específico, ignorar outros
+    if (this.activePointerId !== null && e.pointerId !== this.activePointerId) {
+      return;
     }
 
-    if (!this.isDrawing) return;
     e.preventDefault();
-
-    this.points.push(pos);
+    e.stopPropagation();
 
     if (this.tool === 'eraser') {
+      const pos = this.getPointerPos(e);
+      this.updateCursorRing(pos);
       this.eraseAt(pos.x, pos.y);
-    } else {
-      this.renderStrokeSegment();
+      return;
+    }
+
+    // Processar eventos coalescidos do Apple Pencil (suporte a 120Hz/240Hz ProMotion)
+    const coalescedEvents = (e.getCoalescedEvents && e.getCoalescedEvents().length > 0)
+      ? e.getCoalescedEvents()
+      : [e];
+
+    for (let i = 0; i < coalescedEvents.length; i++) {
+      const pos = this.getPointerPos(coalescedEvents[i]);
+      this.renderContinuousStroke(pos);
     }
   }
 
   onPointerUp(e) {
     if (!this.isDrawing) return;
+
+    if (this.activePointerId !== null) {
+      try {
+        this.drawCanvas.releasePointerCapture(this.activePointerId);
+      } catch (err) {}
+      this.activePointerId = null;
+    }
+
     this.isDrawing = false;
     this.cursorRing.style.display = 'none';
 
-    if (this.points.length === 1 && this.tool !== 'eraser') {
-      // Desenha ponto único se foi apenas um toque com a caneta
-      this.drawSingleDot(this.points[0]);
+    // Se foi apenas um toque rápido (ponto ou acento)
+    if (this.strokePointsCount === 1 && this.lastPoint && this.tool !== 'eraser') {
+      this.drawSingleDot(this.lastPoint);
     }
 
-    this.points = [];
+    this.lastPoint = null;
+    this.lastMidPoint = null;
+    this.strokePointsCount = 0;
     this.hasDrawn = true;
     this.saveState();
 
@@ -288,29 +346,35 @@ class ApplePencilEngine {
       this.cursorRing.style.left = `${pos.x}px`;
       this.cursorRing.style.top = `${pos.y}px`;
       this.cursorRing.style.display = 'block';
-      this.cursorRing.style.borderColor = 'rgba(239, 68, 68, 0.7)';
     } else {
       this.cursorRing.style.display = 'none';
     }
   }
 
   // =========================================================================
-  // MOTOR DE DESENHO DE TRAÇOS & SUAVIZAÇÃO BÉZIER
+  // MOTOR DE CURVAS BÉZIER CONTÍNUAS (SEM FALHAS NEM PONTILHADO)
   // =========================================================================
-  renderStrokeSegment() {
-    const pts = this.points;
-    if (pts.length < 2) return;
+  renderContinuousStroke(currentPoint) {
+    if (!this.lastPoint || !this.lastMidPoint) {
+      this.lastPoint = currentPoint;
+      this.lastMidPoint = { x: currentPoint.x, y: currentPoint.y };
+      return;
+    }
 
     const ctx = this.drawCtx;
-    const p1 = pts[pts.length - 2];
-    const p2 = pts[pts.length - 1];
+
+    // Ponto médio entre o último ponto e o ponto atual
+    const currentMid = {
+      x: (this.lastPoint.x + currentPoint.x) / 2,
+      y: (this.lastPoint.y + currentPoint.y) / 2
+    };
 
     ctx.save();
 
     if (this.tool === 'highlighter') {
-      // Highlighters usam modo de multiplicação e transparência calibrada
+      // Marcador de texto translúcido com multiplicação óptica
       ctx.globalCompositeOperation = 'multiply';
-      ctx.strokeStyle = this.hexToRgba(this.highlighterColor, 0.45);
+      ctx.strokeStyle = this.hexToRgba(this.highlighterColor, 0.40);
       ctx.lineWidth = this.highlighterSize;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -318,28 +382,33 @@ class ApplePencilEngine {
       // Caneta normal
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = this.penColor;
-      
-      // Espessura dinâmica com sensibilidade à pressão do Apple Pencil
+
+      // Espessura sensível à pressão do Apple Pencil
       let width = this.penSize;
-      if (this.pressureEnabled && p2.pointerType === 'pen') {
-        const pressureFactor = 0.45 + (p2.pressure * 0.95);
-        width = this.penSize * pressureFactor;
+      if (this.pressureEnabled && currentPoint.pointerType === 'pen') {
+        const factor = 0.5 + (currentPoint.pressure * 0.9);
+        width = this.penSize * factor;
       }
       ctx.lineWidth = Math.max(1, width);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     }
 
-    // Suavização por ponto médio (Curva Quadrática Bézier)
-    const midX = (p1.x + p2.x) / 2;
-    const midY = (p1.y + p2.y) / 2;
-
+    // =======================================================================
+    // TRAÇADO PERFEITO: Começa em lastMidPoint e termina em currentMid
+    // Isto garante que NUNCA existe espaço vazio entre dois movimentos!
+    // =======================================================================
     ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+    ctx.moveTo(this.lastMidPoint.x, this.lastMidPoint.y);
+    ctx.quadraticCurveTo(this.lastPoint.x, this.lastPoint.y, currentMid.x, currentMid.y);
     ctx.stroke();
 
     ctx.restore();
+
+    // Avançar para o próximo segmento
+    this.lastPoint = currentPoint;
+    this.lastMidPoint = currentMid;
+    this.strokePointsCount++;
   }
 
   drawSingleDot(pos) {
@@ -348,14 +417,14 @@ class ApplePencilEngine {
 
     if (this.tool === 'highlighter') {
       ctx.globalCompositeOperation = 'multiply';
-      ctx.fillStyle = this.hexToRgba(this.highlighterColor, 0.45);
+      ctx.fillStyle = this.hexToRgba(this.highlighterColor, 0.40);
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, this.highlighterSize / 2, 0, Math.PI * 2);
       ctx.fill();
     } else {
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = this.penColor;
-      const radius = Math.max(1, this.penSize / 2);
+      const radius = Math.max(1.2, this.penSize / 2);
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
       ctx.fill();
@@ -367,7 +436,7 @@ class ApplePencilEngine {
   eraseAt(x, y) {
     const ctx = this.drawCtx;
     ctx.save();
-    // Apaga apenas os traços desenhados, mantendo as linhas do papel 100% intactas!
+    // Apaga apenas os traços da caneta, mantendo o papel de fundo intacto
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     ctx.arc(x, y, this.eraserSize / 2, 0, Math.PI * 2);
@@ -376,17 +445,16 @@ class ApplePencilEngine {
   }
 
   // =========================================================================
-  // PAPÉIS: LINHAS, QUADRICULADO, PONTILHADO, LISO
+  // PAPÉIS DE ESTUDO (LINHAS, QUADRICULADO, PONTILHADO, LISO)
   // =========================================================================
   renderPaper() {
     const ctx = this.paperCtx;
     const w = this.width;
     const h = this.height;
 
-    // Cores de fundo e linhas segundo o tema
-    let bgColor = '#fdfbf7'; // Marfim suave
+    let bgColor = '#fdfbf7'; // Marfim natural
     let lineColor = 'rgba(15, 23, 42, 0.08)';
-    let marginColor = 'rgba(239, 68, 68, 0.15)'; // Linha vertical vermelha suave de margem
+    let marginColor = 'rgba(239, 68, 68, 0.16)';
 
     if (this.paperTheme === 'branco') {
       bgColor = '#ffffff';
@@ -407,12 +475,11 @@ class ApplePencilEngine {
     ctx.fillRect(0, 0, w, h);
 
     if (this.paperType === 'linhas') {
-      // Papel com Linhas (Pautado)
       const lineSpacing = 32;
       const startY = 48;
       const marginX = 54;
 
-      // Linha vertical de margem à esquerda (estilo caderno de estudo)
+      // Linha de margem vertical suave
       ctx.strokeStyle = marginColor;
       ctx.lineWidth = 1.2;
       ctx.beginPath();
@@ -420,7 +487,7 @@ class ApplePencilEngine {
       ctx.lineTo(marginX, h);
       ctx.stroke();
 
-      // Linhas horizontais
+      // Pautas horizontais
       ctx.strokeStyle = lineColor;
       ctx.lineWidth = 1;
       for (let y = startY; y < h; y += lineSpacing) {
@@ -430,19 +497,16 @@ class ApplePencilEngine {
         ctx.stroke();
       }
     } else if (this.paperType === 'quadriculado') {
-      // Papel Quadriculado (Grid)
       const gridSize = 26;
       ctx.strokeStyle = lineColor;
       ctx.lineWidth = 0.9;
 
-      // Linhas verticais
       for (let x = gridSize; x < w; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
         ctx.stroke();
       }
-      // Linhas horizontais
       for (let y = gridSize; y < h; y += gridSize) {
         ctx.beginPath();
         ctx.moveTo(0, y);
@@ -450,10 +514,9 @@ class ApplePencilEngine {
         ctx.stroke();
       }
     } else if (this.paperType === 'pontilhado') {
-      // Papel Pontilhado (Dot Grid)
       const dotSpacing = 26;
       const dotRadius = 1.1;
-      ctx.fillStyle = lineColor.replace('0.07', '0.25').replace('0.08', '0.25').replace('0.09', '0.35');
+      ctx.fillStyle = lineColor.replace('0.07', '0.28').replace('0.08', '0.28').replace('0.09', '0.35');
 
       for (let x = dotSpacing; x < w; x += dotSpacing) {
         for (let y = dotSpacing; y < h; y += dotSpacing) {
@@ -463,7 +526,6 @@ class ApplePencilEngine {
         }
       }
     }
-    // 'liso' permanece liso com a cor de fundo
   }
 
   setPaperType(type) {
@@ -482,12 +544,10 @@ class ApplePencilEngine {
   saveState() {
     if (!this.drawCanvas || this.drawCanvas.width <= 0 || this.drawCanvas.height <= 0) return;
     try {
-      // Truncar histórico posterior ao índice atual se tiver havido undo
       if (this.historyIndex < this.history.length - 1) {
         this.history = this.history.slice(0, this.historyIndex + 1);
       }
 
-      // Salvar snapshot como ImageData
       const imgData = this.drawCtx.getImageData(0, 0, this.drawCanvas.width, this.drawCanvas.height);
       this.history.push(imgData);
 
@@ -530,14 +590,10 @@ class ApplePencilEngine {
     if (this.onChangeCallback) this.onChangeCallback();
   }
 
-  // =========================================================================
-  // CARREGAR E EXPORTAR CONTEÚDO
-  // =========================================================================
   getDataUrl() {
     return this.drawCanvas.toDataURL('image/png');
   }
 
-  // Exportar imagem composta: Papel + Notas juntas em alta resolução
   getCombinedDataUrl(scale = 2) {
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = this.width * scale;
@@ -545,9 +601,7 @@ class ApplePencilEngine {
     const expCtx = exportCanvas.getContext('2d');
     
     expCtx.scale(scale, scale);
-    // Desenhar fundo de papel
     expCtx.drawImage(this.paperCanvas, 0, 0, this.width, this.height);
-    // Desenhar traços da caneta
     expCtx.drawImage(this.drawCanvas, 0, 0, this.width, this.height);
 
     return exportCanvas.toDataURL('image/png');
@@ -575,7 +629,7 @@ class ApplePencilEngine {
   }
 
   // =========================================================================
-  // SELEÇÃO DE FERRAMENTAS E CORES
+  // FERRAMENTAS E CORES
   // =========================================================================
   selectTool(tool) {
     this.tool = tool;
