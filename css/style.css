@@ -20,10 +20,10 @@
   --pen-dark-blue: #0c356a;
   --pen-red: #ba181b;
 
-  /* Cores dos Highlighters Solicitados */
-  --hl-yellow: #facc15;
-  --hl-green: #4ade80;
-  --hl-light-red: #fb7185;
+  /* Cores dos Highlighters Solicitados (Tons pastel suaves, não alaranjados nem escuros) */
+  --hl-yellow: #fef08a;
+  --hl-green: #bbf7d0;
+  --hl-light-red: #fbcfe8;
 
   --toolbar-h: 62px;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -60,85 +60,76 @@ html, body {
   background-color: #f8fafc;
 }
 
-/* Barra Superior Unificada (Header iPadOS) - Nítida, Sólida e Sem Blur */
+/* Barra Superior Unificada (Header iPadOS) - Flutuante / Sticky, Minimalista e com Acesso Total por Swipe */
 .app-header {
-  height: 58px;
-  background: #ffffff;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  z-index: 50;
-  color: #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.header-left, .header-center, .header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.app-branding {
-  display: flex;
-  align-items: center;
+  justify-content: flex-start;
+  padding: 0 12px;
+  z-index: 100;
+  color: #111827;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  white-space: nowrap;
   gap: 8px;
-  font-weight: 700;
-  font-size: 18px;
-  color: #0f172a;
-  letter-spacing: -0.4px;
 }
 
-.app-logo-badge {
-  background: linear-gradient(135deg, #38bdf8, #2563eb);
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+.app-header::-webkit-scrollbar {
+  display: none;
+}
+
+.header-left {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.bible-version-pill {
-  font-size: 11px;
-  font-weight: 600;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 3px 8px;
-  border-radius: 20px;
-  color: #475569;
-  letter-spacing: 0.2px;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-/* Seletor de Livro & Capítulo */
+/* Seletor de Livro & Capítulo (Foto 1: "⋯ BPT: Gênesis 1 ▾") */
 .book-chapter-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  color: #0f172a;
-  border: 1.5px solid #cbd5e1;
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-size: 15px;
+  gap: 6px;
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .book-chapter-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: #e5e7eb;
 }
 
 .chapter-nav-btn {
-  background: #f8fafc;
-  color: #334155;
-  border: 1.5px solid #cbd5e1;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -152,8 +143,22 @@ html, body {
 }
 
 .chapter-nav-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: #e5e7eb;
+}
+
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 /* Indicador de Palma Rejeitada */
@@ -415,6 +420,14 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
 
+.verse-text.font-garamond {
+  font-family: Garamond, "Palatino Linotype", "Book Antiqua", serif;
+}
+
+.verse-text.font-mono {
+  font-family: "Courier New", Courier, monospace;
+}
+
 /* Rodapé de navegação rápida entre capítulos */
 .bible-footer-nav {
   display: flex;
@@ -482,25 +495,77 @@ html, body {
   position: relative;
 }
 
-/* Barra de Ferramentas Flutuante Apple Pencil (Pencil Dock) */
-.pencil-toolbar {
-  height: 56px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid #e2e8f0;
+/* Barra de Ferramentas Flutuante Apple Pencil (Pencil Dock) - Responsiva e Acessível */
+.pencil-toolbar-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   z-index: 20;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.toolbar-nav-arrow {
+  background: #f8fafc;
+  border: none;
+  color: #64748b;
+  font-size: 20px;
+  font-weight: 700;
+  width: 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 5;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.toolbar-nav-arrow:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.pencil-toolbar {
+  min-height: 52px;
+  height: 52px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 6px;
+  gap: 5px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  flex: 1;
+}
+
+.pencil-toolbar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.pencil-toolbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.pencil-toolbar > * {
+  flex-shrink: 0;
 }
 
 .tool-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
+  flex-shrink: 0;
 }
 
 /* Botões de Seleção de Caneta / Marca-texto / Borracha */
@@ -663,26 +728,13 @@ html, body {
   transform: scale(0.92);
 }
 
-/* Área do Canvas de Notas */
-.notes-canvas-container {
-  flex: 1;
-  position: relative;
-  width: 100%;
-  height: calc(100% - 56px);
-  overflow: hidden;
-  background-color: #ffffff;
-  -webkit-touch-callout: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
-  touch-action: none !important;
-}
-
+/* Canvases de caligrafia */
 .notes-drawing-canvas,
 .notes-paper-canvas {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
-  touch-action: none !important;
+  touch-action: pan-y !important;
 }
 
 /* Rodapé Flutuante das Notas (Indicador de Página e Capítulo) */
@@ -690,9 +742,7 @@ html, body {
   position: absolute;
   bottom: 16px;
   right: 20px;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #0f172a;
   color: #ffffff;
   padding: 6px 14px;
   border-radius: 20px;
@@ -703,7 +753,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .save-indicator-dot {
@@ -722,9 +772,7 @@ html, body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1116,3 +1164,1762 @@ html, body {
     display: none;
   }
 }
+
+/* ==========================================================================
+   MELHORIAS MODERNAS IPADOS: TRADUÇÕES, FONTE DA BÍBLIA & COLAR TEXTO
+   ========================================================================== */
+
+/* Seletor Moderno de Tradução da Bíblia */
+.translation-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #f1f5f9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 6px 28px 6px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.translation-select:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.translation-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Controlo de Tamanho de Letra da Bíblia */
+.font-size-group {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.font-size-btn {
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.font-size-btn:hover {
+  background: #e2e8f0;
+}
+
+.font-size-btn:active {
+  background: #cbd5e1;
+}
+
+.font-size-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0 4px;
+  min-width: 32px;
+  text-align: center;
+}
+
+/* Barra Flutuante de Ações dos Versículos Selecionados */
+.verse-selection-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 40;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.verse-selection-bar.active {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.verse-selection-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  padding-right: 12px;
+}
+
+.verse-action-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.verse-action-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.verse-action-btn.btn-paste-to-notes {
+  background: #2563eb;
+  border-color: #3b82f6;
+}
+
+.verse-action-btn.btn-paste-to-notes:hover {
+  background: #1d4ed8;
+}
+
+/* Botão de Colar Texto no Toolbar de Notas */
+.paste-text-btn {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.paste-text-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.paste-text-btn:active {
+  transform: scale(0.97);
+}
+
+/* Modal de Colar / Inserir Texto */
+.paste-textarea {
+  width: 100%;
+  height: 140px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #0f172a;
+  outline: none;
+  resize: vertical;
+  margin-top: 10px;
+  margin-bottom: 16px;
+}
+
+.paste-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ==========================================================================
+   CAMADA DE ELEMENTOS DE NOTAS (CAIXAS DE TEXTO & TAREFAS / CHECKBOXES)
+   ========================================================================== */
+.notes-elements-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 12;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Caixa de Texto - Sem fundo colorido, apenas o texto limpo */
+.note-text-box {
+  position: absolute;
+  pointer-events: auto;
+  min-width: 160px;
+  max-width: 680px;
+  background: transparent !important;
+  border: 1.5px dashed transparent;
+  border-radius: 8px;
+  padding: 4px;
+  transition: border-color 0.15s ease;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.note-text-box.is-editing {
+  border-color: rgba(37, 99, 235, 0.45);
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .note-text-box.is-editing {
+  border-color: rgba(147, 197, 253, 0.45);
+}
+
+/* Mini Barra de Ferramentas da Caixa de Texto */
+.text-box-toolbar {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 3px 6px;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  white-space: nowrap;
+}
+
+.note-text-box.is-editing .text-box-toolbar {
+  display: flex;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .text-box-toolbar {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* Pega de arrasto (drag handle) */
+.tb-drag-handle {
+  cursor: grab;
+  color: #64748b;
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tb-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Botões da mini toolbar */
+.tb-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .tb-btn {
+  color: #f1f5f9;
+}
+
+.tb-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .tb-btn:hover {
+  background: #334155;
+}
+
+.tb-btn-delete {
+  color: #ef4444 !important;
+}
+
+.tb-btn-delete:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
+
+/* Seletor de tipo de fonte da nota */
+.tb-font-family-select {
+  height: 26px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 0 4px;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+  max-width: 95px;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .tb-font-family-select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+/* Seletor de tamanho de fonte */
+.tb-font-size-select {
+  height: 26px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 0 4px;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .tb-font-size-select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+/* Botões de cor na mini toolbar */
+.tb-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  transition: transform 0.1s;
+}
+
+.tb-color-dot:hover {
+  transform: scale(1.2);
+}
+
+/* Conteúdo da Caixa de Texto - Fundo 100% transparente, sem caixas coloridas */
+.text-box-content {
+  background: transparent !important;
+  color: #1a1a1a;
+  font-size: 18px;
+  line-height: 1.6;
+  outline: none;
+  min-height: 32px;
+  min-width: 140px;
+  word-break: break-word;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .text-box-content {
+  color: #f8fafc;
+}
+
+.text-box-content:empty:before {
+  content: attr(placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   CAIXA DE TAREFAS / VERIFICAÇÃO (CHECKLIST)
+   ========================================================================== */
+.note-checklist-box {
+  position: absolute;
+  pointer-events: auto;
+  min-width: 220px;
+  max-width: 520px;
+  background: transparent !important;
+  border: 1.5px dashed transparent;
+  border-radius: 8px;
+  padding: 4px;
+  transition: border-color 0.15s ease;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.note-checklist-box.is-editing {
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.checklist-toolbar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 3px 8px;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+}
+
+.note-checklist-box.is-editing .checklist-toolbar {
+  display: flex;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .checklist-toolbar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #1a1a1a;
+}
+
+.bible-panel.theme-escuro ~ .notes-panel .checklist-item {
+  color: #f8fafc;
+}
+
+.checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.checklist-item.is-done .task-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.task-text {
+  flex: 1;
+  outline: none;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.task-text:empty:before {
+  content: "Item de tarefa...";
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.task-remove-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.checklist-item:hover .task-remove-btn {
+  opacity: 1;
+}
+
+.task-remove-btn:hover {
+  color: #ef4444;
+}
+
+.checklist-toolbar select.tb-font-family-select,
+.checklist-toolbar select.tb-font-size-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 2px 4px;
+  font-size: 11px;
+  color: #334155;
+  background: #f8fafc;
+  outline: none;
+  cursor: pointer;
+}
+
+.checklist-toolbar .tb-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  flex-shrink: 0;
+  transition: transform 0.1s ease;
+}
+
+.checklist-toolbar .tb-color-dot:hover {
+  transform: scale(1.25);
+}
+
+/* ==========================================================================
+   CAIXA DE IMAGEM INSERIDA NAS NOTAS (SELEÇÃO, ARRASTO, REDIMENSIONAR E APAGAR)
+   ========================================================================== */
+.note-image-box {
+  position: absolute;
+  pointer-events: auto;
+  user-select: none;
+  border: 2px dashed transparent;
+  border-radius: 10px;
+  padding: 4px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  z-index: 10;
+  cursor: grab;
+}
+
+.note-image-box:active {
+  cursor: grabbing;
+}
+
+.note-image-box:hover,
+.note-image-box.is-selected {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+/* Botão circular de apagar no canto superior direito da imagem (estilo iPad/iOS) */
+.img-corner-del-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  line-height: 1;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.img-corner-del-btn:hover,
+.img-corner-del-btn:active {
+  background: #dc2626;
+  transform: scale(1.15);
+}
+
+.note-image-box:hover .img-corner-del-btn,
+.note-image-box.is-selected .img-corner-del-btn {
+  display: flex !important;
+}
+
+.note-image-box .image-toolbar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 5px 9px;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  white-space: nowrap;
+}
+
+.note-image-box:hover .image-toolbar,
+.note-image-box.is-selected .image-toolbar {
+  display: flex !important;
+}
+
+.image-toolbar .img-tb-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+}
+
+.image-toolbar .img-tb-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.image-toolbar .img-tb-btn.btn-del {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  font-weight: 700;
+  padding: 5px 12px;
+}
+
+.image-toolbar .img-tb-btn.btn-del:hover {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.note-image-box img {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   CARDS DE SELEÇÃO DE EXPORTAÇÃO A4
+   ========================================================================== */
+.export-target-card {
+  padding: 12px;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.export-target-card:hover {
+  border-color: #93c5fd;
+  background: #f8fafc;
+}
+
+.export-target-card.selected {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE DOS MENUS EM QUALQUER TAMANHO DE JANELA
+   ========================================================================== */
+@media (max-width: 1100px) {
+  .app-branding .branding-text {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .palm-status-pill .palm-label {
+    max-width: 90px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .translation-select {
+    max-width: 130px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  .btn-export span:last-child {
+    display: none;
+  }
+  .view-switch-btn {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  .book-chapter-btn {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   ESTILOS DE IMPRESSÃO A4 (EXATAMENTE 1 PÁGINA, SEM ESTICAR O TEXTO)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .app-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    background: #ffffff !important;
+  }
+
+  /* Ocultar rigorosamente elementos de interface e navegação */
+  header, .app-header,
+  .pencil-floating-palette, .floating-pencil-palette, #pencilFloatingPalette,
+  .pencil-toolbar-wrapper, .pencil-toolbar, .toolbar-nav-arrow,
+  .verse-selection-bar,
+  .modal-overlay,
+  .pencil-cursor-ring,
+  .notes-footer-badge,
+  .image-toolbar, .text-box-toolbar, .checklist-toolbar,
+  .img-corner-del-btn, .tb-drag-handle, .task-remove-btn, .add-task-row,
+  .btn-shrink, .btn-grow, .btn-del, .btn-note-font-family, .btn-note-font-size,
+  .sticker-del,
+  .split-divider,
+  #splitDivider,
+  #biblePanel,
+  #notesPanel {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Workspace unificado de Estudo Bíblico */
+  .journal-workspace,
+  #journalWorkspace {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    background: #ffffff !important;
+  }
+
+  /* Folha unificada A4 auto-adaptável a qualquer orientação (Retrato ou Paisagem) sem corte */
+  .journal-sheet,
+  .journal-sheet.orientation-landscape,
+  .journal-sheet.orientation-portrait {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: hidden !important;
+    position: relative !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    transform: none !important;
+  }
+
+  /* Layout das Duas Colunas Integradas na Mesma Folha */
+  .journal-columns-layout {
+    display: flex !important;
+    width: 100% !important;
+    height: 100% !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    flex-direction: row !important;
+  }
+
+  .journal-columns-layout.side-right {
+    flex-direction: row-reverse !important;
+  }
+
+  /* Coluna da Bíblia (Ocupa exatamente os primeiros 50% sem cortes à esquerda) */
+  .journal-bible-column,
+  #journalBibleColumn,
+  .journal-sheet.orientation-portrait .journal-bible-column {
+    flex: 0 0 calc(50% - 7px) !important;
+    width: calc(50% - 7px) !important;
+    max-width: calc(50% - 7px) !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 28px 20px 20px 28px !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .journal-sheet.orientation-landscape .journal-bible-column {
+    padding: 24px 20px 20px 28px !important;
+  }
+
+  /* Separador Central Elegante */
+  .journal-column-separator {
+    display: block !important;
+    width: 1px !important;
+    height: 100% !important;
+    background: rgba(148, 163, 184, 0.4) !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Coluna das Notas (Ocupa exatamente os segundos 50%) */
+  .journal-notes-column,
+  #journalNotesColumn,
+  .journal-sheet.orientation-portrait .journal-notes-column {
+    flex: 0 0 calc(50% - 7px) !important;
+    width: calc(50% - 7px) !important;
+    max-width: calc(50% - 7px) !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 28px 28px 20px 20px !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .journal-sheet.orientation-landscape .journal-notes-column {
+    padding: 24px 28px 20px 20px !important;
+  }
+
+  /* Container dos Canvases de Desenho Apple Pencil */
+  .notes-canvas-container,
+  #notesCanvasContainer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    display: block !important;
+    visibility: visible !important;
+    margin: 0 !important;
+  }
+
+  .notes-paper-canvas {
+    display: none !important;
+  }
+
+  /* Canvas de Desenho: Escala 1:1 real idêntica ao ecrã (NUNCA encolhe nem esmaga) */
+  .notes-drawing-canvas {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 11 !important;
+    object-fit: unset !important;
+    display: block !important;
+    visibility: visible !important;
+    margin: 0 !important;
+  }
+
+  .notes-elements-layer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 12 !important;
+    display: block !important;
+    visibility: visible !important;
+    margin: 0 !important;
+  }
+
+  /* Caixas de Texto e Checklist limpas sem contorno de edição */
+  .note-text-box,
+  .note-checklist-box,
+  .text-box-content,
+  .checklist-item {
+    border: none !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Ocultar frases e versículos cortados na impressão A4 (corte no ponto final) */
+  .print-cut-hidden {
+    display: none !important;
+  }
+}
+
+/* Frases Bíblicas e Ocultação para Corte no Ponto Final */
+.bible-sentence {
+  display: inline;
+}
+
+.print-cut-hidden {
+  display: none !important;
+}
+
+/* Badges e Selos Formais de Estudo Bíblico */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.badge-pecado { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+.badge-promessa { background: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
+.badge-mandamento { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.badge-atitude { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.badge-exemplo { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.badge-erro { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.badge-oracao { background: #f5f3ff; color: #5b21b6; border-color: #ddd6fe; }
+.badge-verdades { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+.badge-adoracao { background: #fefce8; color: #854d0e; border-color: #fef08a; }
+
+/* Legado para retrocompatibilidade */
+.badge-exegese { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+.badge-context { background: #fefce8; color: #854d0e; border-color: #fef08a; }
+.badge-aplicacao { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.badge-chave { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.badge-revelacao { background: #fdf4ff; color: #86198f; border-color: #f5d0fe; }
+
+.formal-badge-choice {
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.formal-badge-choice:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   NOVA INTERFACE BÍBLIA & NOTAS INCORPORADAS (JOURNALING BIBLE UNIFICADA)
+   ========================================================================== */
+
+/* Workspace Unificado (Fundo Neutro Claro como no iPad/GoodNotes) */
+.journal-workspace {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #eceff2;
+  display: flex;
+  justify-content: center;
+  padding: 16px 16px 120px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Folha / Caderno Unificado (Folha Única Contínua com Bíblia à Esquerda + Notas à Direita) */
+.journal-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 1160px;
+  min-height: calc(100vh - 90px);
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+  overflow: visible;
+  margin: 0 auto;
+  transition: max-width 0.25s ease, min-height 0.25s ease;
+}
+
+/* Modo A4 Paisagem (Horizontal: 297mm x 210mm) */
+.journal-sheet.orientation-landscape {
+  max-width: 1160px;
+  min-height: 820px;
+}
+
+/* Modo A4 Vertical (Retrato: 210mm x 297mm) */
+.journal-sheet.orientation-portrait {
+  max-width: 820px;
+  min-height: 1160px;
+}
+
+.journal-sheet.orientation-portrait .journal-bible-column {
+  padding: 28px 20px 100px 28px;
+}
+
+.journal-sheet.orientation-portrait .journal-notes-column {
+  padding: 28px 28px 100px 20px;
+}
+
+/* Padrões de Papel da Folha Unificada: O papel escolhido só aparece na parte das notas e NÃO na bíblia! */
+.journal-sheet {
+  background-color: #ffffff;
+}
+
+/* Coluna da Bíblia: Sempre limpa, sem grelhas nem linhas */
+.journal-bible-column {
+  flex: 1;
+  min-width: 0;
+  width: 50%;
+  padding: 36px 28px 120px 40px;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 1;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Coluna de Notas: O papel cobre 100% de todo o scroll da página */
+.journal-notes-column {
+  flex: 1;
+  min-width: 0;
+  width: 50%;
+  padding: 36px 36px 120px 28px;
+  position: relative;
+  z-index: 1;
+  background-color: #ffffff;
+  min-height: 100%;
+  align-self: stretch;
+}
+
+/* Padrões de Papel aplicados EXCLUSIVAMENTE ao Caderno de Notas */
+.journal-sheet.paper-liso .journal-notes-column {
+  background-color: #ffffff;
+}
+
+.journal-sheet.paper-linhas .journal-notes-column {
+  background-color: #ffffff;
+  background-image: linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+  background-size: 100% 32px;
+}
+
+.journal-sheet.paper-pontilhado .journal-notes-column {
+  background-color: #ffffff;
+  background-image: radial-gradient(rgba(100, 116, 139, 0.35) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+}
+
+.journal-sheet.paper-quadriculado .journal-notes-column {
+  background-color: #ffffff;
+  background-image: linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px;
+}
+
+/* Suporte aos temas Marfim, Sépia e Escuro */
+.theme-marfim .journal-sheet,
+.theme-marfim .journal-bible-column,
+.theme-marfim .journal-notes-column {
+  background-color: #fdfbf7 !important;
+}
+
+.theme-sepia .journal-sheet,
+.theme-sepia .journal-bible-column,
+.theme-sepia .journal-notes-column {
+  background-color: #f4ecd8 !important;
+}
+
+.theme-escuro .journal-sheet,
+.theme-escuro .journal-bible-column,
+.theme-escuro .journal-notes-column {
+  background-color: #18181b !important;
+}
+
+/* Container dos Canvases de Desenho Apple Pencil: Z-index 10 para desenhar/fazer highlight SOBRE o texto bíblico */
+.notes-canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  touch-action: pan-y;
+  -webkit-touch-callout: none !important;
+}
+
+/* Canvas de Desenho Apple Pencil e Highlighters: mix-blend-mode multiply permite ver o texto bíblico perfeitamente nítido sem escurecer */
+.notes-drawing-canvas {
+  mix-blend-mode: multiply;
+  touch-action: pan-y;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Pílula Flutuante para Copiar Texto Bíblico Selecionado para as Notas */
+.bible-selection-pill {
+  position: fixed;
+  z-index: 2000;
+  display: none;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+}
+
+.bible-selection-pill:hover, .bible-selection-pill:active {
+  background: #1e293b;
+  transform: scale(1.05);
+}
+
+.journal-verse-sup {
+  cursor: pointer;
+  padding: 1px 3px;
+  border-radius: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.journal-verse-sup:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Chips de Filtro do Modal de Índice de Notas */
+.notes-filter-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.notes-filter-chip:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.notes-filter-chip.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.notes-index-card:hover {
+  border-color: #93c5fd !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
+  transform: translateY(-1px);
+}
+
+/* Estrutura das Duas Colunas Integradas na Mesma Folha (Bíblia à esquerda, Notas à direita) */
+.journal-columns-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+  z-index: 1;
+  flex-direction: row !important;
+}
+
+/* Divisória Central Discreta */
+.journal-column-separator {
+  width: 1px;
+  background: rgba(148, 163, 184, 0.3);
+  margin: 30px 0 60px 0;
+  flex-shrink: 0;
+}
+
+.notes-column-header {
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px dashed rgba(148, 163, 184, 0.35);
+}
+
+.notes-header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.theme-escuro .notes-header-title {
+  color: #f1f5f9;
+}
+
+/* Botões de Ações de Notas e Imprimir no Header */
+.btn-note-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-note-option:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.btn-note-option.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.header-vsep {
+  width: 1px;
+  height: 24px;
+  background: #cbd5e1;
+  margin: 0 4px;
+}
+
+.btn-export-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: none;
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-export-pdf:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+}
+
+/* Título do Capítulo em estilo moderno e minimalista (apenas o grande número como na Foto 1) */
+.journal-chapter-header,
+.journal-column-title {
+  margin-bottom: 24px;
+}
+
+.journal-chapter-num {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  color: #0f172a;
+  font-family: Georgia, "New York", serif;
+  margin-bottom: 0;
+}
+
+.theme-escuro .journal-chapter-num {
+  color: #f1f5f9;
+}
+
+.journal-chapter-badge {
+  display: none;
+}
+
+/* Renderização dos Versículos em Parágrafos Naturais Contínuos (Foto 1) */
+.journal-verses-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  line-height: 1.85;
+  font-size: var(--bible-font-size, 18px);
+}
+
+.journal-paragraph {
+  margin: 0 0 16px 0;
+  line-height: 1.85;
+  font-size: inherit;
+  color: #1e293b;
+  text-align: left;
+}
+
+.journal-verse-span {
+  position: relative;
+  transition: background 0.15s ease;
+  border-radius: 3px;
+  padding: 1px 2px;
+  font-size: inherit;
+}
+
+.journal-verse-span:hover {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.journal-verse-span.selected {
+  background: rgba(254, 240, 138, 0.65);
+  box-shadow: 0 0 0 2px #facc15;
+}
+
+.journal-verse-sup {
+  font-size: 0.68em;
+  font-weight: 700;
+  vertical-align: super;
+  color: #64748b;
+  margin-right: 3px;
+  margin-left: 2px;
+  user-select: none;
+}
+
+/* ==========================================================================
+   PALETA FLUTUANTE APPLE PENCIL (ESTILO PENCILKIT IPADOS DAS FOTOS)
+   ========================================================================== */
+.pencil-floating-palette {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 32px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pencil-floating-palette.minimized {
+  transform: translateX(-50%) translateY(80px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fp-btn {
+  background: transparent;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: #334155;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.fp-btn:hover {
+  background: #f1f5f9;
+}
+
+.fp-btn.active {
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+  transform: translateY(-2px);
+}
+
+.fp-sep {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  margin: 0 2px;
+}
+
+/* Círculos de Cores da Paleta Flutuante */
+.fp-color-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fp-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1.5px #cbd5e1;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fp-color-dot:hover {
+  transform: scale(1.18);
+}
+
+.fp-color-dot.active {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 2px #2563eb, 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* ==========================================================================
+   DROPDOWN MENU "+" (ADD IMAGE, STICKERS, SHAPES, TEXT BOX - FOTO 2)
+   ========================================================================== */
+.add-menu-dropdown {
+  position: fixed;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+  padding: 6px 0;
+  min-width: 180px;
+  z-index: 120;
+  display: none;
+  flex-direction: column;
+}
+
+.add-menu-dropdown.open {
+  display: flex;
+}
+
+.add-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.add-menu-item:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+
+.add-menu-item span.icon {
+  font-size: 18px;
+  width: 22px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* ==========================================================================
+   MODAL DEFINIÇÕES DE PÁGINA "T" (EXATAMENTE COMO NA FOTO 3)
+   ========================================================================== */
+.page-settings-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.setting-section-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.setting-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 14px;
+}
+
+/* Grid de backgrounds da Foto 3 (Blank, Lines, Dots, Grid) */
+.bg-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.bg-option-box {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  transition: all 0.15s ease;
+  background: #ffffff;
+}
+
+.bg-option-box:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.bg-option-box.active {
+  border-color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 0 0 1px #0f172a;
+  color: #0f172a;
+}
+
+.bg-option-icon {
+  font-size: 20px;
+  color: #64748b;
+}
+
+/* Slider Define Text Side (Foto 3) */
+.slider-container-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-labels-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.slider-val-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.side-slider {
+  width: 100%;
+  accent-color: #84cc16; /* Verde como na foto 3 */
+  cursor: pointer;
+  height: 6px;
+}
+
+.side-quick-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.side-chip {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.side-chip.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+/* Typeface Select (Foto 3) */
+.typeface-select-box {
+  width: 100%;
+  height: 42px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14.5px;
+  color: #1e293b;
+  background: #ffffff;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   STICKERS & ANOTAÇÕES FLUTUANTES (FOTO 4 & 5)
+   ========================================================================== */
+.note-sticker-box {
+  position: absolute;
+  pointer-events: auto;
+  user-select: none;
+  cursor: grab;
+  z-index: 10;
+  transition: transform 0.1s ease;
+}
+
+.note-sticker-box:active {
+  cursor: grabbing;
+}
+
+.note-sticker-box .sticker-toolbar {
+  display: none;
+  position: absolute;
+  top: -24px;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 2px 4px;
+  gap: 4px;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.note-sticker-box:hover .sticker-toolbar {
+  display: flex;
+}
+
+.sticker-del {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.sticker-content {
+  font-size: 40px;
+  line-height: 1;
+}
+
+/* Modal de Stickers / Emojis Bíblicos */
+.stickers-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+
+.sticker-choice-item {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+}
+
+.sticker-choice-item:hover {
+  transform: scale(1.2);
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+/* Caixa de Nota Ancorada ao Versículo (Foto 4) */
+.verse-annotation-card {
+  position: absolute;
+  z-index: 25;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+  padding: 12px 16px;
+  width: 290px;
+  pointer-events: auto;
+}
+
+.vac-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.vac-textarea {
+  width: 100%;
+  min-height: 60px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+.vac-save-btn {
+  background: #84cc16; /* Verde como na foto 4 */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+
+

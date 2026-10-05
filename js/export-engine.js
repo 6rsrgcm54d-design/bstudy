@@ -1,6 +1,10 @@
 /**
- * BStudy - Motor de Exportação em Alta Resolução (Imagem PNG & Documento PDF)
- * Gera a composição perfeita da Página da Bíblia Lado a Lado com as Notas do Apple Pencil
+ * BStudy - Motor de Exportação e Impressão em Alta Definição (Página A4 Única)
+ * Garante:
+ * 1. Proporções A4 reais (210mm x 297mm) com Bíblia e Notas SEMPRE JUNTAS (Paisagem e Vertical)
+ * 2. As anotações, marcações (highlighters) e caixas de texto mantêm o alinhamento exato com os versículos
+ * 3. Impressão estritamente limitada a EXATAMENTE 1 PÁGINA (sem páginas em branco)
+ * 4. Descarregamento e impressão direta sem menus de partilha
  */
 
 class ExportEngine {
@@ -10,298 +14,205 @@ class ExportEngine {
   }
 
   /**
-   * Renderiza a composição lado a lado em um Canvas de Alta Resolução (2x Retina)
+   * Captura a folha unificada (#journalSheet) com Bíblia + Notas perfeitamente incorporadas e alinhadas
    */
-  async generateCombinedCanvas(options = {}) {
+  async captureUnifiedSheetDataUrl(orientation = null) {
+    const sheet = document.getElementById('journalSheet');
+    if (!sheet) throw new Error('Folha journalSheet não encontrada');
+
+    // Desativar temporariamente bordas de edição para captura limpa
+    const editingEls = document.querySelectorAll('.is-editing, .is-selected');
+    editingEls.forEach(el => el.classList.remove('is-editing', 'is-selected'));
+    if (document.activeElement) document.activeElement.blur();
+
+    const isPortrait = orientation ? (orientation === 'portrait') : sheet.classList.contains('orientation-portrait');
+    const pageW = isPortrait ? 820 : 1160;
+    const pageH = isPortrait ? 1160 : 820;
+
+    // Guardar estilos e scroll originais
+    const origStyle = sheet.getAttribute('style') || '';
+    const ws = document.getElementById('journalWorkspace');
+    const origScrollTop = ws ? ws.scrollTop : 0;
+    if (ws) ws.scrollTop = 0;
+
+    // Alinhar a folha rigorosamente ao topo e início sem desvios de margem / centralização do ecrã
+    sheet.style.position = 'relative';
+    sheet.style.margin = '0';
+    sheet.style.width = `${pageW}px`;
+    sheet.style.maxWidth = `${pageW}px`;
+    sheet.style.height = `${pageH}px`;
+    sheet.style.maxHeight = `${pageH}px`;
+    sheet.style.overflow = 'hidden';
+
+    try {
+      if (window.bStudyApp && window.bStudyApp.prepareBiblePrintCut) {
+        window.bStudyApp.prepareBiblePrintCut(isPortrait ? 'portrait' : 'landscape');
+      }
+
+      if (window.html2pdf) {
+        const worker = window.html2pdf().set({
+          margin: 0,
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: 0
+          },
+          jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: isPortrait ? 'portrait' : 'landscape'
+          }
+        }).from(sheet);
+
+        const imgData = await worker.outputImg('datauristring');
+
+        // Restaurar dimensões normais da folha
+        if (origStyle) sheet.setAttribute('style', origStyle);
+        else sheet.removeAttribute('style');
+        if (ws) ws.scrollTop = origScrollTop;
+        if (window.bStudyApp && window.bStudyApp.restoreBiblePrintCut) {
+          window.bStudyApp.restoreBiblePrintCut();
+        }
+
+        return imgData;
+      }
+    } catch (err) {
+      console.warn('Captura html2pdf falhou, recorrendo a canvas combinado:', err);
+      if (origStyle) sheet.setAttribute('style', origStyle);
+      else sheet.removeAttribute('style');
+      if (ws) ws.scrollTop = origScrollTop;
+      if (window.bStudyApp && window.bStudyApp.restoreBiblePrintCut) {
+        window.bStudyApp.restoreBiblePrintCut();
+      }
+    }
+
+    // Fallback de emergência caso html2pdf não esteja disponível
+    const fallbackCanvas = await this.generateCombinedA4Canvas({ orientation: isPortrait ? 'portrait' : 'landscape' });
+    if (window.bStudyApp && window.bStudyApp.restoreBiblePrintCut) {
+      window.bStudyApp.restoreBiblePrintCut();
+    }
+    return fallbackCanvas.toDataURL('image/png');
+  }
+
+  /**
+   * 1. Descarregar como PDF A4 de Página Única (Bíblia + Notas Incorporadas)
+   */
+  async exportAsPdf(options = {}) {
     const book = this.bible.getCurrentBook();
     const chapterNum = this.bible.currentChapter;
-    const verses = this.bible.getCurrentChapterVerses();
-    const notesDataUrl = this.pencil.getCombinedDataUrl(2);
+    const orientation = options.orientation || window.bStudyApp?.orientation || 'landscape';
+    const isPortrait = orientation === 'portrait';
+    const fileName = `BStudy_${book.name}_Cap_${chapterNum}_A4_${isPortrait ? 'Vertical' : 'Paisagem'}.pdf`;
 
-    // Dimensões do documento de exportação (Formato A4 Paisagem / Proporção iPad 4:3 em alta resolução: 2400 x 1700)
-    const width = 2400;
-    const height = 1700;
+    const imgData = await this.captureUnifiedSheetDataUrl(orientation);
+
+    if (window.jspdf && window.jspdf.jsPDF) {
+      const pdf = new window.jspdf.jsPDF({
+        orientation: isPortrait ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pdfWidth = isPortrait ? 210 : 297;
+      const pdfHeight = isPortrait ? 297 : 210;
+
+      // Adicionar imagem correspondente a 100% da página A4
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.save(fileName);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 2. Descarregar como Imagem PNG de Alta Resolução (Bíblia + Notas Juntas)
+   */
+  async exportAsImage(options = {}) {
+    const book = this.bible.getCurrentBook();
+    const chapterNum = this.bible.currentChapter;
+    const orientation = options.orientation || window.bStudyApp?.orientation || 'landscape';
+    const isPortrait = orientation === 'portrait';
+    const fileName = `BStudy_${book.name}_Cap_${chapterNum}_A4_${isPortrait ? 'Vertical' : 'Paisagem'}.png`;
+
+    const imgData = await this.captureUnifiedSheetDataUrl(orientation);
+
+    const a = document.createElement('a');
+    a.href = imgData;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return true;
+  }
+
+  /**
+   * 3. Imprimir Diretamente em Formato A4 (Impressão Perfeita de 1 Página)
+   * Garante:
+   * - Bíblia + Notas SEMPRE JUNTAS (tanto em modo Vertical como Paisagem)
+   * - Alinhamento fiel aos versículos onde as notas e highlights foram feitos
+   * - Exatamente 1 página impressa sem páginas em branco
+   * - Tipografia vetorial nítida nativa sem cortes
+   */
+  async printA4(options = {}) {
+    const orientation = options.orientation || window.bStudyApp?.orientation || 'portrait';
+
+    // 1. Fechar qualquer modal aberto
+    const exportModal = document.getElementById('exportModal');
+    if (exportModal) exportModal.classList.remove('open');
+
+    // 2. Rolar workspace para o topo
+    const ws = document.getElementById('journalWorkspace');
+    if (ws) ws.scrollTop = 0;
+
+    // 3. Preparar o corte limpo da Bíblia no último ponto final que cabe na folha A4
+    if (window.bStudyApp && window.bStudyApp.prepareBiblePrintCut) {
+      window.bStudyApp.prepareBiblePrintCut(orientation);
+    }
+
+    // 4. Garantir regra @page correta para o navegador
+    let styleTag = document.getElementById('bstudy-page-orientation-style');
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = 'bstudy-page-orientation-style';
+      document.head.appendChild(styleTag);
+    }
+    styleTag.innerHTML = `@page { size: A4 ${orientation}; margin: 0 !important; }`;
+
+    // 5. Chamar impressão nativa nítida do navegador
+    setTimeout(() => {
+      window.focus();
+      window.print();
+    }, 150);
+
+    return true;
+  }
+
+  /**
+   * Fallback de emergência (caso a captura DOM falhe)
+   */
+  async generateCombinedA4Canvas(options = {}) {
+    const isPortrait = options.orientation === 'portrait';
+    const width = isPortrait ? 2480 : 3508;
+    const height = isPortrait ? 3508 : 2480;
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
 
-    // 1. Fundo Geral do Documento
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // 2. Cabeçalho Geral
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, width, 140);
-
-    // Título no cabeçalho
-    ctx.font = 'bold 44px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(`Estudo Bíblico • ${book.name} ${chapterNum}`, 70, 75);
-
-    // Subtítulo e data
-    const dateStr = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
-    ctx.font = '24px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`Bíblia Sagrada (Almeida Atualizada • Domínio Público)   |   ${dateStr}`, 70, 112);
-
-    // Tag do App no canto direito
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('BStudy iPad', width - 70, 85);
-    ctx.textAlign = 'left';
-
-    // 3. Coluna da Esquerda: Texto da Bíblia
-    const colY = 170;
-    const colHeight = height - colY - 60;
-    const colWidth = (width - 180) / 2;
-    const bibleX = 70;
-    const notesX = bibleX + colWidth + 40;
-
-    // Fundo da coluna bíblica
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect(bibleX, colY, colWidth, colHeight, 16);
-    ctx.fill();
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Cabeçalho da coluna bíblica
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 34px Georgia, "New York", serif';
-    ctx.fillText(`${book.name} — Capítulo ${chapterNum}`, bibleX + 40, colY + 60);
-
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(bibleX + 40, colY + 80);
-    ctx.lineTo(bibleX + colWidth - 40, colY + 80);
-    ctx.stroke();
-
-    // Renderizar versículos com quebra de linha inteligente
-    let currentY = colY + 120;
-    const maxTextY = colY + colHeight - 40;
-    const maxLineWidth = colWidth - 80;
-
-    ctx.font = '22px Georgia, "New York", serif';
-    ctx.fillStyle = '#334155';
-
-    for (let i = 0; i < verses.length; i++) {
-      if (currentY > maxTextY - 30) {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'italic 20px Georgia, serif';
-        ctx.fillText(`[... continuação de mais ${verses.length - i} versículos]`, bibleX + 40, currentY);
-        break;
-      }
-
-      const vNum = (i + 1).toString();
-      const vText = verses[i];
-      const fullText = `${vNum}.  ${vText}`;
-
-      // Quebrar texto do versículo em linhas
-      const words = fullText.split(' ');
-      let line = '';
-
-      for (let w = 0; w < words.length; w++) {
-        const testLine = line + words[w] + ' ';
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxLineWidth && w > 0) {
-          // Desenhar linha
-          if (line.startsWith(vNum + '.')) {
-            // Destacar número do versículo em negrito/cor
-            ctx.fillStyle = '#0284c7';
-            ctx.font = 'bold 22px Georgia, serif';
-            const numWidth = ctx.measureText(vNum + '. ').width;
-            ctx.fillText(vNum + '. ', bibleX + 40, currentY);
-
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '22px Georgia, serif';
-            ctx.fillText(line.substring(vNum.length + 2), bibleX + 40 + numWidth, currentY);
-          } else {
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '22px Georgia, serif';
-            ctx.fillText(line, bibleX + 40, currentY);
-          }
-          line = words[w] + ' ';
-          currentY += 34;
-          if (currentY > maxTextY - 30) break;
-        } else {
-          line = testLine;
-        }
-      }
-
-      if (line.trim() && currentY <= maxTextY - 30) {
-        if (line.startsWith(vNum + '.')) {
-          ctx.fillStyle = '#0284c7';
-          ctx.font = 'bold 22px Georgia, serif';
-          const numWidth = ctx.measureText(vNum + '. ').width;
-          ctx.fillText(vNum + '. ', bibleX + 40, currentY);
-
-          ctx.fillStyle = '#1e293b';
-          ctx.font = '22px Georgia, serif';
-          ctx.fillText(line.substring(vNum.length + 2), bibleX + 40 + numWidth, currentY);
-        } else {
-          ctx.fillStyle = '#1e293b';
-          ctx.font = '22px Georgia, serif';
-          ctx.fillText(line, bibleX + 40, currentY);
-        }
-        currentY += 40; // Espaço entre versículos
-      }
+    if (this.pencil && this.pencil.drawCanvas) {
+      ctx.drawImage(this.pencil.drawCanvas, 0, 0, width, height);
     }
-
-    // 4. Coluna da Direita: Caderno de Notas com Apple Pencil
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect(notesX, colY, colWidth, colHeight, 16);
-    ctx.fill();
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Carregar imagem das notas e desenhar dentro do cartão da direita
-    await new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(notesX, colY, colWidth, colHeight, 16);
-        ctx.clip(); // Cortar bordas arredondadas perfeitamente
-
-        // Desenhar notas mantendo a proporção ideal
-        ctx.drawImage(img, notesX, colY, colWidth, colHeight);
-        ctx.restore();
-        resolve(true);
-      };
-      img.onerror = () => resolve(false);
-      img.src = notesDataUrl;
-    });
-
-    // 5. Rodapé
-    ctx.font = '20px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = '#94a3b8';
-    ctx.textAlign = 'center';
-    ctx.fillText('Gerado com BStudy para iPad • Bíblia e Caderno de Caligrafia Digital com Apple Pencil', width / 2, height - 22);
-    ctx.textAlign = 'left';
 
     return canvas;
-  }
-
-  /**
-   * Exportar como Imagem PNG de Alta Resolução
-   */
-  async exportAsImage(options = {}) {
-    const canvas = await this.generateCombinedCanvas(options);
-    const book = this.bible.getCurrentBook();
-    const chapterNum = this.bible.currentChapter;
-    const fileName = `BStudy_${book.name}_Capitulo_${chapterNum}.png`;
-
-    return new Promise((resolve) => {
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          resolve(false);
-          return;
-        }
-
-        // Tentar Partilha Nativa no iPad (AirDrop, Guardar Imagem em Fotografias, Ficheiros)
-        const file = new File([blob], fileName, { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && options.useShareSheet) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `Estudo Bíblico: ${book.name} ${chapterNum}`,
-              text: `Estudo de ${book.name} ${chapterNum} com anotações Apple Pencil`
-            });
-            resolve(true);
-            return;
-          } catch (shareErr) {
-            console.log('Partilha cancelada ou fallback para download direto');
-          }
-        }
-
-        // Download direto
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 3000);
-        resolve(true);
-      }, 'image/png');
-    });
-  }
-
-  /**
-   * Exportar como Documento PDF Formatado
-   */
-  async exportAsPdf(options = {}) {
-    const canvas = await this.generateCombinedCanvas(options);
-    const book = this.bible.getCurrentBook();
-    const chapterNum = this.bible.currentChapter;
-    const fileName = `BStudy_${book.name}_Capitulo_${chapterNum}.pdf`;
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-    // Verificar se jsPDF está disponível
-    const jsPDF = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
-
-    if (jsPDF) {
-      // Criar PDF em formato Paisagem (Landscape) correspondente à proporção da imagem
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
-      });
-
-      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-
-      if (options.useShareSheet && navigator.canShare) {
-        const pdfBlob = pdf.output('blob');
-        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-        if (navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `PDF Estudo: ${book.name} ${chapterNum}`,
-              text: `Estudo Bíblico de ${book.name} ${chapterNum}`
-            });
-            return true;
-          } catch (e) {
-            console.log('Partilha nativa cancelada');
-          }
-        }
-      }
-
-      pdf.save(fileName);
-      return true;
-    } else {
-      // Fallback via elemento para html2pdf se necessário
-      const container = document.createElement('div');
-      container.style.width = '1200px';
-      container.style.margin = '0 auto';
-      const img = document.createElement('img');
-      img.src = imgData;
-      img.style.width = '100%';
-      container.appendChild(img);
-      document.body.appendChild(container);
-
-      if (window.html2pdf) {
-        await window.html2pdf().set({
-          margin: 10,
-          filename: fileName,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-        }).from(container).save();
-      }
-
-      document.body.removeChild(container);
-      return true;
-    }
   }
 }
 
