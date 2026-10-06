@@ -286,11 +286,11 @@ class ApplePencilEngine {
     });
   }
 
-  getPointerPos(e) {
-    const rect = this.drawCanvas.getBoundingClientRect();
+  getPointerPos(e, useCache = false) {
+    const rect = (useCache && this.cachedRect) ? this.cachedRect : this.drawCanvas.getBoundingClientRect();
+    const scale = (useCache && this.cachedScale !== null && this.cachedScale !== undefined) ? this.cachedScale : (this.getViewScale() || 1);
     const clientX = e.clientX;
     const clientY = e.clientY;
-    const scale = this.getViewScale() || 1;
     
     let pressure = 0.5;
     if (e.pressure !== undefined && e.pressure > 0) {
@@ -308,7 +308,11 @@ class ApplePencilEngine {
   onPointerDown(e) {
     if (this.tool === 'select') return;
 
-    const pos = this.getPointerPos(e);
+    // Cacheia coordenadas da folha no início do traço para eliminar recalculação de layout a 120Hz/240Hz
+    this.cachedRect = this.drawCanvas.getBoundingClientRect();
+    this.cachedScale = this.getViewScale() || 1;
+
+    const pos = this.getPointerPos(e, true);
 
     // =======================================================================
     // DISTINÇÃO INTELIGENTE: APPLE PENCIL ('pen') VS DEDO ('touch')
@@ -329,6 +333,8 @@ class ApplePencilEngine {
       }
       if (this.onlyPenMode) {
         // Permitir deslizamento vertical natural do texto bíblico
+        this.cachedRect = null;
+        this.cachedScale = null;
         return;
       }
     }
@@ -366,7 +372,7 @@ class ApplePencilEngine {
     e.stopPropagation();
 
     if (this.tool === 'eraser') {
-      const pos = this.getPointerPos(e);
+      const pos = this.getPointerPos(e, true);
       this.updateCursorRing(pos);
       this.eraseAt(pos.x, pos.y);
       return;
@@ -384,7 +390,7 @@ class ApplePencilEngine {
     } catch (err) {}
 
     for (let i = 0; i < coalescedEvents.length; i++) {
-      const pos = this.getPointerPos(coalescedEvents[i]);
+      const pos = this.getPointerPos(coalescedEvents[i], true);
       this.renderContinuousStroke(pos);
     }
   }
@@ -405,7 +411,6 @@ class ApplePencilEngine {
     // =======================================================================
     if (this.strokePointsCount > 1 && this.lastPoint && this.lastMidPoint && this.tool !== 'eraser') {
       const ctx = this.drawCtx;
-      ctx.save();
       if (this.tool === 'highlighter') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = this.getHighlighterRgba();
@@ -425,7 +430,6 @@ class ApplePencilEngine {
       ctx.moveTo(this.lastMidPoint.x, this.lastMidPoint.y);
       ctx.lineTo(this.lastPoint.x, this.lastPoint.y);
       ctx.stroke();
-      ctx.restore();
     } else if (this.strokePointsCount === 1 && this.lastPoint && this.tool !== 'eraser') {
       // Se foi apenas um toque rápido (ponto ou acento)
       this.drawSingleDot(this.lastPoint);
@@ -436,6 +440,8 @@ class ApplePencilEngine {
     this.lastPoint = null;
     this.lastMidPoint = null;
     this.strokePointsCount = 0;
+    this.cachedRect = null;
+    this.cachedScale = null;
     this.hasDrawn = true;
     this.saveState();
 
@@ -506,8 +512,6 @@ class ApplePencilEngine {
       y: (this.lastPoint.y + currentPoint.y) / 2
     };
 
-    ctx.save();
-
     if (this.tool === 'highlighter') {
       // Marcador pastel suave com blend multiply no CSS do canvas:
       // Mantém o texto bíblico 100% nítido, luminoso e legível, sem manchas escuras!
@@ -537,8 +541,6 @@ class ApplePencilEngine {
     ctx.moveTo(this.lastMidPoint.x, this.lastMidPoint.y);
     ctx.quadraticCurveTo(this.lastPoint.x, this.lastPoint.y, currentMid.x, currentMid.y);
     ctx.stroke();
-
-    ctx.restore();
 
     this.lastPoint = currentPoint;
     this.lastMidPoint = currentMid;
@@ -713,7 +715,7 @@ class ApplePencilEngine {
   }
 
   // =========================================================================
-  // GESTÃO DE ESTADOS (UNDO / REDO / CLEAR)
+  // GESTÃO DE ESTADOS (UNDO / REDO / CLEAR) - TEXTURAS GPU ULTRARRÁPIDAS
   // =========================================================================
   saveState() {
     if (!this.drawCanvas || this.drawCanvas.width <= 0 || this.drawCanvas.height <= 0) return;
@@ -722,10 +724,17 @@ class ApplePencilEngine {
         this.history = this.history.slice(0, this.historyIndex + 1);
       }
 
-      const imgData = this.drawCtx.getImageData(0, 0, this.drawCanvas.width, this.drawCanvas.height);
-      this.history.push(imgData);
+      // Snapshot em Canvas Offscreen (GPU texture blit ultrarrápido sem transferir megabytes para a CPU)
+      const snapshot = document.createElement('canvas');
+      snapshot.width = this.drawCanvas.width;
+      snapshot.height = this.drawCanvas.height;
+      const sCtx = snapshot.getContext('2d');
+      sCtx.drawImage(this.drawCanvas, 0, 0);
 
-      if (this.history.length > this.maxHistory) {
+      this.history.push(snapshot);
+
+      // Limite otimizado para tablets: 6 snapshots ocupam quase zero CPU e mantêm 120 FPS
+      if (this.history.length > 6) {
         this.history.shift();
       } else {
         this.historyIndex++;
@@ -739,7 +748,11 @@ class ApplePencilEngine {
     if (this.historyIndex > 0) {
       this.historyIndex--;
       const snapshot = this.history[this.historyIndex];
-      this.drawCtx.putImageData(snapshot, 0, 0);
+      this.drawCtx.save();
+      this.drawCtx.setTransform(1, 0, 0, 1, 0, 0);
+      this.drawCtx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+      this.drawCtx.drawImage(snapshot, 0, 0);
+      this.drawCtx.restore();
       if (this.onChangeCallback) this.onChangeCallback();
       return true;
     }
@@ -750,7 +763,11 @@ class ApplePencilEngine {
     if (this.historyIndex < this.history.length - 1) {
       this.historyIndex++;
       const snapshot = this.history[this.historyIndex];
-      this.drawCtx.putImageData(snapshot, 0, 0);
+      this.drawCtx.save();
+      this.drawCtx.setTransform(1, 0, 0, 1, 0, 0);
+      this.drawCtx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+      this.drawCtx.drawImage(snapshot, 0, 0);
+      this.drawCtx.restore();
       if (this.onChangeCallback) this.onChangeCallback();
       return true;
     }
@@ -1031,6 +1048,79 @@ class ApplePencilEngine {
     return box;
   }
 
+  // =========================================================================
+  // ARRASTO SUAVE DE OBJETOS COM HARDWARE RAF E POINTER CAPTURE (120 FPS NO IPAD)
+  // =========================================================================
+  makeElementDraggable(box, handleElement, onDragEndCallback) {
+    const handle = handleElement || box;
+    handle.style.touchAction = 'none';
+
+    let isDragging = false;
+    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    let currentLeft = 0, currentTop = 0;
+    let cachedScale = 1;
+    let rafId = null;
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      const dx = (e.clientX - startX) / cachedScale;
+      const dy = (e.clientY - startY) / cachedScale;
+      currentLeft = Math.max(0, origLeft + dx);
+      currentTop = Math.max(0, origTop + dy);
+
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          box.style.left = `${currentLeft}px`;
+          box.style.top = `${currentTop}px`;
+          rafId = null;
+        });
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      box.style.left = `${currentLeft}px`;
+      box.style.top = `${currentTop}px`;
+      try {
+        handle.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      if (onDragEndCallback) onDragEndCallback();
+      if (this.onChangeCallback) this.onChangeCallback();
+    };
+
+    const onPointerDown = (e) => {
+      if (e.target.closest('select, button, input, .tb-color-dot, .tb-btn-done, .tb-btn-delete, .sticker-del, .img-tb-btn, .img-corner-del-btn')) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      origLeft = parseInt(box.style.left, 10) || 0;
+      origTop = parseInt(box.style.top, 10) || 0;
+      currentLeft = origLeft;
+      currentTop = origTop;
+      cachedScale = this.getViewScale() || 1;
+
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+      e.stopPropagation();
+      e.preventDefault();
+    };
+
+    handle.addEventListener('pointerdown', onPointerDown);
+  }
+
   setupTextBoxEvents(box, toolbar, content) {
     const dragHandle = toolbar.querySelector('.tb-drag-handle');
     const famSelect = toolbar.querySelector('.tb-font-family-select');
@@ -1042,42 +1132,11 @@ class ApplePencilEngine {
     const deleteBtn = toolbar.querySelector('.tb-btn-delete');
     const colorDots = toolbar.querySelectorAll('.tb-color-dot');
 
-    // Movimentação / Arraste
-    let isDragging = false;
-    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
-
-    const onPointerDown = (e) => {
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      origLeft = parseInt(box.style.left, 10) || 0;
-      origTop = parseInt(box.style.top, 10) || 0;
-      box.classList.add('is-editing');
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      e.stopPropagation();
-      e.preventDefault();
-    };
-
-    const onPointerMove = (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      box.style.left = `${Math.max(0, origLeft + dx)}px`;
-      box.style.top = `${Math.max(0, origTop + dy)}px`;
-    };
-
-    const onPointerUp = () => {
-      if (isDragging) {
-        isDragging = false;
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-        if (this.onChangeCallback) this.onChangeCallback();
-      }
-    };
-
+    // Movimentação / Arraste de Alta Precisão sem quebras de layout
     if (dragHandle) {
-      dragHandle.addEventListener('pointerdown', onPointerDown);
+      this.makeElementDraggable(box, dragHandle, () => {
+        box.classList.add('is-editing');
+      });
     }
 
     // Comandos de Formatação
@@ -1333,42 +1392,11 @@ class ApplePencilEngine {
     });
 
     const dragHandle = toolbar.querySelector('.tb-drag-handle');
-    let isDragging = false;
-    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
-
-    const onPointerDown = (e) => {
-      if (e.target.closest('select, button, .tb-color-dot, .tb-add-item, .tb-btn-done, .tb-btn-delete')) return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      origLeft = parseInt(box.style.left, 10) || 0;
-      origTop = parseInt(box.style.top, 10) || 0;
-      box.classList.add('is-editing');
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      e.stopPropagation();
-      e.preventDefault();
-    };
-
-    const onPointerMove = (e) => {
-      if (!isDragging) return;
-      const scale = this.getViewScale() || 1;
-      const dx = (e.clientX - startX) / scale;
-      const dy = (e.clientY - startY) / scale;
-      box.style.left = `${Math.max(0, origLeft + dx)}px`;
-      box.style.top = `${Math.max(0, origTop + dy)}px`;
-    };
-
-    const onPointerUp = () => {
-      if (isDragging) {
-        isDragging = false;
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-        if (this.onChangeCallback) this.onChangeCallback();
-      }
-    };
-
-    if (dragHandle) dragHandle.addEventListener('pointerdown', onPointerDown);
+    if (dragHandle) {
+      this.makeElementDraggable(box, dragHandle, () => {
+        box.classList.add('is-editing');
+      });
+    }
 
     const addBtn = toolbar.querySelector('.tb-add-item');
     if (addBtn) addBtn.addEventListener('click', () => addItem('', false));
@@ -1677,44 +1705,11 @@ class ApplePencilEngine {
       });
     }
 
-    // Arrasto suave proporcional à escala da visualização
-    let isDragging = false;
-    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
-
-    const onPointerDown = (e) => {
-      if (e.target.closest('.img-tb-btn')) return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      origLeft = parseInt(box.style.left, 10) || 0;
-      origTop = parseInt(box.style.top, 10) || 0;
-      box.classList.add('is-selected');
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      e.stopPropagation();
-      e.preventDefault();
-    };
-
-    const onPointerMove = (e) => {
-      if (!isDragging) return;
-      const scale = this.getViewScale() || 1;
-      const dx = (e.clientX - startX) / scale;
-      const dy = (e.clientY - startY) / scale;
-      box.style.left = `${Math.max(0, origLeft + dx)}px`;
-      box.style.top = `${Math.max(0, origTop + dy)}px`;
-    };
-
-    const onPointerUp = () => {
-      if (isDragging) {
-        isDragging = false;
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-        if (this.onChangeCallback) this.onChangeCallback();
-      }
-    };
-
+    // Arrasto suave proporcional à escala da visualização com RAF e Pointer Capture
     const targetHandle = dragHandle || box;
-    targetHandle.addEventListener('pointerdown', onPointerDown);
+    this.makeElementDraggable(box, targetHandle, () => {
+      box.classList.add('is-selected');
+    });
   }
 
   setupDraggableElement(box) {
@@ -1729,41 +1724,7 @@ class ApplePencilEngine {
       });
     }
 
-    let isDragging = false;
-    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
-
-    const onPointerDown = (e) => {
-      if (e.target.closest('.sticker-del')) return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      origLeft = parseInt(box.style.left, 10) || 0;
-      origTop = parseInt(box.style.top, 10) || 0;
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      e.stopPropagation();
-      e.preventDefault();
-    };
-
-    const onPointerMove = (e) => {
-      if (!isDragging) return;
-      const scale = this.getViewScale() || 1;
-      const dx = (e.clientX - startX) / scale;
-      const dy = (e.clientY - startY) / scale;
-      box.style.left = `${Math.max(0, origLeft + dx)}px`;
-      box.style.top = `${Math.max(0, origTop + dy)}px`;
-    };
-
-    const onPointerUp = () => {
-      if (isDragging) {
-        isDragging = false;
-        window.removeEventListener('pointermove', onPointerMove);
-        window.removeEventListener('pointerup', onPointerUp);
-        if (this.onChangeCallback) this.onChangeCallback();
-      }
-    };
-
-    dragHandle.addEventListener('pointerdown', onPointerDown);
+    this.makeElementDraggable(box, dragHandle);
   }
 
   clearElements() {

@@ -369,9 +369,15 @@ class BStudyApp {
     this.updateSaveIndicator('A guardar...');
     clearTimeout(this.autoSaveTimeout);
     this.autoSaveTimeout = setTimeout(async () => {
+      // Se o utilizador ainda estiver com a caneta no ecrã a escrever, adiar para não causar soluços de CPU
+      if (this.pencilEngine && this.pencilEngine.isDrawing) {
+        this.handleNotesDrawn();
+        return;
+      }
+
       const chapterKey = this.bibleEngine.getChapterKey();
       const book = this.bibleEngine.getCurrentBook();
-      const dataUrl = this.pencilEngine.getDataUrl();
+      const dataUrl = (this.pencilEngine && this.pencilEngine.hasDrawn) ? this.pencilEngine.getDataUrl() : '';
       const elements = this.pencilEngine.getElementsData();
 
       await this.notesStorage.saveNote(chapterKey, 0, dataUrl, {
@@ -382,7 +388,7 @@ class BStudyApp {
       });
 
       this.updateSaveIndicator('Guardado');
-    }, 600);
+    }, 2500);
   }
 
   /**
