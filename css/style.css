@@ -740,13 +740,13 @@ html, body {
   transform: scale(0.92);
 }
 
-/* Canvases de caligrafia */
+/* Canvases de caligrafia: touch-action: none é OBRIGATÓRIO no iPadOS para a folha NÃO mexer ao escrever */
 .notes-drawing-canvas,
 .notes-paper-canvas {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
-  touch-action: pan-y !important;
+  touch-action: none !important;
 }
 
 /* Rodapé Flutuante das Notas (Indicador de Página e Capítulo) */
@@ -2296,14 +2296,14 @@ html, body {
   height: 100%;
   z-index: 10;
   pointer-events: none;
-  touch-action: pan-y;
+  touch-action: none !important;
   -webkit-touch-callout: none !important;
 }
 
 /* Canvas de Desenho Apple Pencil e Highlighters: mix-blend-mode multiply permite ver o texto bíblico perfeitamente nítido sem escurecer */
 .notes-drawing-canvas {
   mix-blend-mode: multiply;
-  touch-action: pan-y;
+  touch-action: none !important;
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;

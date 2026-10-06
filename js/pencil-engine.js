@@ -123,7 +123,7 @@ class ApplePencilEngine {
     this.drawCanvas.style.zIndex = '3';
     this.drawCanvas.style.pointerEvents = 'auto';
     this.drawCanvas.style.cursor = 'crosshair';
-    this.drawCanvas.style.touchAction = 'pan-y';
+    this.drawCanvas.style.touchAction = 'none';
     this.drawCanvas.style.mixBlendMode = 'multiply';
     this.drawCanvas.style.webkitTouchCallout = 'none';
     this.drawCanvas.style.webkitUserSelect = 'none';
@@ -327,17 +327,25 @@ class ApplePencilEngine {
     // =======================================================================
     if (pos.pointerType === 'touch') {
       if (this.isDrawing) {
+        // Rejeição total de palma da mão enquanto a caneta escreve (NUNCA mexe o papel nem risca)
         e.preventDefault();
         e.stopPropagation();
         return;
       }
       if (this.onlyPenMode) {
-        // Permitir deslizamento vertical natural do texto bíblico
+        // Modo Apple Pencil ativo: toque com 1 dedo faz scroll vertical suave da folha
+        this.isFingerScrolling = true;
+        this.fingerStartY = e.clientY;
+        const ws = document.getElementById('journalWorkspace');
+        this.fingerStartScrollTop = ws ? ws.scrollTop : 0;
         this.cachedRect = null;
         this.cachedScale = null;
+        e.preventDefault();
         return;
       }
     }
+
+    this.isFingerScrolling = false;
 
     e.preventDefault();
     e.stopPropagation();
@@ -348,6 +356,7 @@ class ApplePencilEngine {
     } catch (err) {}
 
     this.isDrawing = true;
+    this.currentWidth = null;
     this.strokePointsCount = 1;
     this.lastPoint = pos;
     this.lastMidPoint = { x: pos.x, y: pos.y };
@@ -359,6 +368,16 @@ class ApplePencilEngine {
   }
 
   onPointerMove(e) {
+    if (this.isFingerScrolling) {
+      const ws = document.getElementById('journalWorkspace');
+      if (ws) {
+        const deltaY = e.clientY - this.fingerStartY;
+        ws.scrollTop = this.fingerStartScrollTop - deltaY;
+      }
+      e.preventDefault();
+      return;
+    }
+
     if (!this.isDrawing) return;
 
     // Se o evento pertencer a outro ponteiro enquanto desenhamos (ex: palma da mão descansada), ignora
@@ -396,6 +415,11 @@ class ApplePencilEngine {
   }
 
   onPointerUp(e) {
+    if (this.isFingerScrolling) {
+      this.isFingerScrolling = false;
+      return;
+    }
+
     if (!this.isDrawing) return;
 
     if (this.activePointerId !== null) {
@@ -418,10 +442,7 @@ class ApplePencilEngine {
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = this.penColor;
-        let width = this.penSize;
-        if (this.pressureEnabled && this.lastPoint.pointerType === 'pen') {
-          width = this.penSize * (0.6 + (this.lastPoint.pressure * 0.8));
-        }
+        let width = this.currentWidth || this.penSize;
         ctx.lineWidth = Math.max(1, width);
       }
       ctx.lineCap = 'round';
@@ -436,6 +457,7 @@ class ApplePencilEngine {
     }
 
     this.isDrawing = false;
+    this.currentWidth = null;
     this.cursorRing.style.display = 'none';
     this.lastPoint = null;
     this.lastMidPoint = null;
@@ -451,6 +473,10 @@ class ApplePencilEngine {
   }
 
   onPointerCancel(e) {
+    if (this.isFingerScrolling) {
+      this.isFingerScrolling = false;
+      return;
+    }
     if (this.activePointerId !== null && e.pointerId === this.activePointerId) {
       this.onPointerUp(e);
     }
@@ -525,13 +551,14 @@ class ApplePencilEngine {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = this.penColor;
 
-      // Espessura sensível à pressão do Apple Pencil
-      let width = this.penSize;
+      // Espessura sensível à pressão do Apple Pencil com suavização dinâmica aveludada
+      let targetWidth = this.penSize;
       if (this.pressureEnabled && currentPoint.pointerType === 'pen') {
-        const factor = 0.6 + (currentPoint.pressure * 0.8);
-        width = this.penSize * factor;
+        const factor = 0.5 + (currentPoint.pressure * 1.0);
+        targetWidth = this.penSize * factor;
       }
-      ctx.lineWidth = Math.max(1, width);
+      this.currentWidth = this.currentWidth ? (this.currentWidth * 0.65 + targetWidth * 0.35) : targetWidth;
+      ctx.lineWidth = Math.max(1, this.currentWidth);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     }
