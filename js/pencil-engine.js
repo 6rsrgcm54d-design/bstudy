@@ -306,6 +306,17 @@ class ApplePencilEngine {
   }
 
   onPointerDown(e) {
+    // 0. Detetar toque no número do versículo para selecionar / copiar mesmo com caneta
+    try {
+      const hitEls = document.elementsFromPoint(e.clientX, e.clientY);
+      const hitSup = hitEls && hitEls.find(el => el.classList && el.classList.contains('journal-verse-sup'));
+      if (hitSup) {
+        hitSup.click();
+        e.preventDefault();
+        return;
+      }
+    } catch (err) {}
+
     if (this.tool === 'select') return;
 
     // Cacheia coordenadas da folha no início do traço para eliminar recalculação de layout a 120Hz/240Hz
@@ -361,10 +372,65 @@ class ApplePencilEngine {
     this.lastPoint = pos;
     this.lastMidPoint = { x: pos.x, y: pos.y };
 
+    if (this.tool === 'highlighter') {
+      this.highlighterStartPoint = { x: pos.x, y: pos.y };
+      try {
+        this.highlighterSnapshot = document.createElement('canvas');
+        this.highlighterSnapshot.width = this.drawCanvas.width;
+        this.highlighterSnapshot.height = this.drawCanvas.height;
+        this.highlighterSnapshot.getContext('2d').drawImage(this.drawCanvas, 0, 0);
+      } catch (err) {
+        this.highlighterSnapshot = null;
+      }
+    }
+
     if (this.tool === 'eraser') {
       this.updateCursorRing(pos);
       this.eraseAt(pos.x, pos.y);
     }
+  }
+
+  renderStraightHighlighter(currentPoint) {
+    if (!this.highlighterStartPoint || !this.highlighterSnapshot) return;
+    const startX = this.highlighterStartPoint.x;
+    const startY = this.highlighterStartPoint.y;
+    const dx = currentPoint.x - startX;
+    const dy = currentPoint.y - startY;
+
+    // Regra de Traçado Reto Impecável (sem curvas e sem oscilações):
+    // 1) Se for traço marcadamente vertical na margem: trava X no startX (linha reta vertical)
+    // 2) Em todos os outros casos (sublinhado / realce de texto): trava Y no startY (linha reta horizontal perfeita)
+    let endX = currentPoint.x;
+    let endY = startY;
+
+    if (Math.abs(dy) > 2.5 * Math.abs(dx)) {
+      endX = startX;
+      endY = currentPoint.y;
+    }
+
+    const ctx = this.drawCtx;
+    // Restaurar imagem da folha prévia ao traço (GPU blit a 0.08ms)
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+    ctx.drawImage(this.highlighterSnapshot, 0, 0);
+    ctx.restore();
+
+    // Desenhar a linha reta contínua translúcida e límpida
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = this.getHighlighterRgba();
+    ctx.lineWidth = this.highlighterSize;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    ctx.restore();
+
+    this.lastPoint = { x: endX, y: endY };
+    this.strokePointsCount++;
   }
 
   onPointerMove(e) {
@@ -394,6 +460,12 @@ class ApplePencilEngine {
       const pos = this.getPointerPos(e, true);
       this.updateCursorRing(pos);
       this.eraseAt(pos.x, pos.y);
+      return;
+    }
+
+    if (this.tool === 'highlighter') {
+      const pos = this.getPointerPos(e, true);
+      this.renderStraightHighlighter(pos);
       return;
     }
 
@@ -427,6 +499,28 @@ class ApplePencilEngine {
         this.drawCanvas.releasePointerCapture(this.activePointerId);
       } catch (err) {}
       this.activePointerId = null;
+    }
+
+    // Se for marca-texto, a linha reta já está desenhada no canvas
+    if (this.tool === 'highlighter') {
+      if (this.strokePointsCount <= 1 && this.lastPoint) {
+        this.drawSingleDot(this.lastPoint);
+      }
+      this.highlighterSnapshot = null;
+      this.highlighterStartPoint = null;
+      this.isDrawing = false;
+      this.currentWidth = null;
+      this.lastPoint = null;
+      this.lastMidPoint = null;
+      this.strokePointsCount = 0;
+      this.cachedRect = null;
+      this.cachedScale = null;
+      this.hasDrawn = true;
+      this.saveState();
+      if (this.onChangeCallback) {
+        this.onChangeCallback();
+      }
+      return;
     }
 
     // =======================================================================
@@ -503,14 +597,32 @@ class ApplePencilEngine {
   }
 
   getHighlighterRgba() {
-    // Cores pastel suaves e luminosas que não escurecem o texto bíblico
+    // Cores pastel suaves, luminosas e transparentes que deixam o texto bíblico 100% visível e nítido
     const map = {
-      '#fef08a': 'rgba(254, 240, 138, 0.42)', // Amarelo suave
-      '#bbf7d0': 'rgba(187, 247, 208, 0.45)', // Verde menta
-      '#fbcfe8': 'rgba(251, 207, 232, 0.46)'  // Rosa suave
+      // Amarelos luminosos suaves
+      '#fef08a': 'rgba(254, 240, 138, 0.40)', // Amarelo suave luminoso
+      '#eab308': 'rgba(254, 240, 138, 0.40)', // Amarelo paleta mapeado para suave
+      '#facc15': 'rgba(254, 240, 138, 0.40)',
+      'yellow': 'rgba(254, 240, 138, 0.40)',
+      // Verdes menta suaves e translúcidos
+      '#bbf7d0': 'rgba(187, 247, 208, 0.42)', // Verde menta suave
+      '#10b981': 'rgba(187, 247, 208, 0.42)', // Verde paleta mapeado para menta suave
+      'green': 'rgba(187, 247, 208, 0.42)',
+      // Rosas pastel suaves e límpidos
+      '#fbcfe8': 'rgba(251, 207, 232, 0.42)', // Rosa suave pastel
+      '#ba181b': 'rgba(251, 207, 232, 0.45)', // Vermelho paleta mapeado para rosa suave
+      '#ef4444': 'rgba(251, 207, 232, 0.45)',
+      'lightRed': 'rgba(251, 207, 232, 0.42)',
+      // Azuis céu suaves
+      '#0c356a': 'rgba(186, 230, 253, 0.42)', // Azul paleta mapeado para azul céu suave
+      '#38bdf8': 'rgba(186, 230, 253, 0.42)',
+      '#60a5fa': 'rgba(186, 230, 253, 0.42)',
+      'blue': 'rgba(186, 230, 253, 0.42)',
+      // Ponto preto/escuro da paleta: se selecionado como marcador, usa amarelo suave padrão
+      '#1a1a1a': 'rgba(254, 240, 138, 0.40)'
     };
     if (map[this.highlighterColor]) return map[this.highlighterColor];
-    return this.hexToRgba(this.highlighterColor, 0.42);
+    return this.hexToRgba(this.highlighterColor, 0.38);
   }
 
   // =========================================================================
@@ -934,10 +1046,17 @@ class ApplePencilEngine {
       if (tool === 'select') {
         this.drawCanvas.style.pointerEvents = 'none';
         this.drawCanvas.style.cursor = 'default';
+        if (this.container) this.container.style.pointerEvents = 'none';
+        if (document.body) document.body.classList.add('tool-select-active');
       } else {
         this.drawCanvas.style.pointerEvents = 'auto';
         this.drawCanvas.style.cursor = tool === 'eraser' ? 'none' : 'crosshair';
+        if (this.container) this.container.style.pointerEvents = 'none';
+        if (document.body) document.body.classList.remove('tool-select-active');
       }
+    }
+    if (this.onToolChange) {
+      try { this.onToolChange(tool); } catch (e) {}
     }
   }
 
