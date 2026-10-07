@@ -2263,70 +2263,18 @@ html, body {
   -webkit-user-select: text !important;
 }
 
-/* Quando o modo de seleção pura de texto estiver ativo */
-body.tool-select-active .notes-canvas-container,
-body.tool-select-active .notes-drawing-canvas,
-body.tool-select-active .notes-elements-layer {
-  pointer-events: none !important;
+/* Quando a ferramenta NÃO for marcador nem borracha (ex: Caneta ou Selecionar),
+   a Coluna da Bíblia fica no topo (z-index: 15) para permitir toque e seleção de texto 100% nativos! */
+.journal-sheet:not(.tool-highlighter):not(.tool-eraser) .journal-bible-column {
+  position: relative;
+  z-index: 15 !important;
+  pointer-events: auto !important;
 }
 
-/* Switch no cabeçalho do capítulo bíblico */
-.bible-mode-switch {
-  display: inline-flex;
-  align-items: center;
-  background: #f1f5f9;
-  padding: 3px;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  gap: 2px;
-}
-
-.bible-mode-btn {
-  border: none;
-  background: transparent;
-  padding: 5px 12px;
-  border-radius: 16px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
-}
-
-.bible-mode-btn:hover {
-  color: #1e293b;
-}
-
-.bible-mode-btn.active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  font-weight: 700;
-}
-
-/* Botão de colar na coluna de notas */
-.notes-header-paste-btn {
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
-  color: #334155;
-  padding: 4px 10px;
-  border-radius: 14px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.15s ease;
-}
-
-.notes-header-paste-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #0f172a;
+/* Quando for marcador ou borracha, a Bíblia fica sob o canvas para permitir sublinhar a direito */
+.journal-sheet.tool-highlighter .journal-bible-column,
+.journal-sheet.tool-eraser .journal-bible-column {
+  z-index: 1 !important;
 }
 
 /* Coluna de Notas: O papel cobre 100% de todo o scroll da página */
@@ -2414,38 +2362,25 @@ body.tool-select-active .notes-elements-layer {
   display: none;
   background: #0f172a;
   color: #ffffff;
-  padding: 4px 6px;
+  padding: 8px 16px;
   border-radius: 24px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
   align-items: center;
-  gap: 4px;
+  gap: 7px;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
   white-space: nowrap;
 }
 
-.bible-selection-pill .pill-action-btn {
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  padding: 6px 11px;
-  border-radius: 18px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background 0.15s ease;
-}
-
-.bible-selection-pill .pill-action-btn:hover,
-.bible-selection-pill .pill-action-btn:active {
-  background: rgba(255, 255, 255, 0.18);
+.bible-selection-pill:hover,
+.bible-selection-pill:active {
+  background: #1e293b;
+  transform: scale(1.05);
 }
 
 .journal-verse-sup {
@@ -3149,18 +3084,8 @@ body.tool-select-active .notes-elements-layer {
           
           <!-- COLUNA DA ESQUERDA: BÍBLIA -->
           <div id="journalBibleColumn" class="journal-bible-column">
-            <div class="journal-chapter-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <div class="journal-chapter-header">
               <div id="journalChapterNum" class="journal-chapter-num">1</div>
-              <div class="bible-mode-switch" id="bibleModeSwitch">
-                <button type="button" id="btnBibleSelectMode" class="bible-mode-btn" title="Ativar seleção de texto bíblico para copiar e colar">
-                  <span>👆</span>
-                  <span>Selecionar Texto</span>
-                </button>
-                <button type="button" id="btnBibleDrawMode" class="bible-mode-btn active" title="Ativar modo de escrita / marcador">
-                  <span>🖍️</span>
-                  <span>Caneta & Marcador</span>
-                </button>
-              </div>
             </div>
 
             <div id="journalVersesList" class="journal-verses-container"></div>
@@ -3174,12 +3099,8 @@ body.tool-select-active .notes-elements-layer {
 
           <!-- COLUNA DA DIREITA: CADERNO DE NOTAS -->
           <div id="journalNotesColumn" class="journal-notes-column">
-            <div class="notes-column-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="notes-column-header">
               <div class="notes-header-title">Notas:</div>
-              <button type="button" id="btnPasteBibleQuote" class="notes-header-paste-btn" title="Colar citação bíblica copiada nas notas">
-                <span>📋</span>
-                <span>Colar Citação</span>
-              </button>
             </div>
             
             <div id="journalNotesDropzone" class="journal-notes-dropzone"></div>
@@ -3199,9 +3120,8 @@ body.tool-select-active .notes-elements-layer {
       <div class="fp-sep"></div>
 
       <!-- Modo Selecionar Texto Bíblico -->
-      <button id="toolSelect" class="fp-btn" data-tool="select" title="Selecionar Texto Bíblico / Copiar para Notas" style="min-width: 44px; display: flex; align-items: center; gap: 3px; padding: 0 8px;">
-        <span style="font-size: 15px;">👆</span>
-        <span style="font-size: 11px; font-weight: 700;">Selecionar</span>
+      <button id="toolSelect" class="fp-btn" data-tool="select" title="Selecionar Texto Bíblico">
+        👆
       </button>
 
       <!-- Caneta de Caligrafia -->
@@ -3264,17 +3184,10 @@ body.tool-select-active .notes-elements-layer {
     </div>
 
     <!-- BOTÃO FLUTUANTE DE COPIAR SELEÇÃO BÍBLICA PARA AS NOTAS -->
-    <div id="bibleSelectionPill" class="bible-selection-pill" title="Opções de cópia do texto bíblico selecionado">
-      <button type="button" id="btnPillCopyToNotes" class="pill-action-btn" title="Copiar e colar diretamente nas notas">
-        <span>📋</span>
-        <span>Colar nas Notas</span>
-      </button>
-      <div style="width: 1px; height: 16px; background: rgba(255, 255, 255, 0.3);"></div>
-      <button type="button" id="btnPillCopyToClipboard" class="pill-action-btn" title="Copiar texto bíblico para a área de transferência">
-        <span>📄</span>
-        <span>Copiar</span>
-      </button>
-    </div>
+    <button id="bibleSelectionPill" class="bible-selection-pill" title="Adicionar texto selecionado ao Caderno de Notas">
+      <span>📋</span>
+      <span>Copiar para Notas</span>
+    </button>
 
     <!-- DROPDOWN DO MENU "+" (FOTO 2) -->
     <div id="addMenuDropdown" class="add-menu-dropdown">
@@ -5450,6 +5363,14 @@ class ApplePencilEngine {
   selectTool(tool) {
     this.tool = tool;
     this.cursorRing.style.display = 'none';
+
+    // Sincronizar classes ativas na folha de estudo
+    const sheet = document.getElementById('journalSheet');
+    if (sheet) {
+      sheet.classList.remove('tool-highlighter', 'tool-eraser', 'tool-pen', 'tool-select');
+      sheet.classList.add(`tool-${tool}`);
+    }
+
     if (this.drawCanvas) {
       if (tool === 'select') {
         this.drawCanvas.style.pointerEvents = 'none';
@@ -7292,17 +7213,6 @@ class BStudyApp {
       fpTools.forEach(b => {
         b.classList.toggle('active', b.dataset.tool === tool);
       });
-      const btnBibleSelectMode = document.getElementById('btnBibleSelectMode');
-      const btnBibleDrawMode = document.getElementById('btnBibleDrawMode');
-      if (btnBibleSelectMode && btnBibleDrawMode) {
-        if (tool === 'select') {
-          btnBibleSelectMode.classList.add('active');
-          btnBibleDrawMode.classList.remove('active');
-        } else {
-          btnBibleSelectMode.classList.remove('active');
-          btnBibleDrawMode.classList.add('active');
-        }
-      }
     };
 
     fpTools.forEach(btn => {
@@ -7317,43 +7227,6 @@ class BStudyApp {
       this.pencilEngine.onToolChange = (tool) => {
         updateToolUI(tool);
       };
-    }
-
-    // Botões de alternância direta no cabeçalho da Bíblia (Selecionar vs Desenhar/Anotar)
-    const btnBibleSelectMode = document.getElementById('btnBibleSelectMode');
-    const btnBibleDrawMode = document.getElementById('btnBibleDrawMode');
-    if (btnBibleSelectMode) {
-      btnBibleSelectMode.addEventListener('click', () => {
-        this.pencilEngine.selectTool('select');
-        updateToolUI('select');
-        this.showToast('👆 Modo Seleção ativo: Arraste para selecionar texto ou toque nos versículos.', 2500);
-      });
-    }
-    if (btnBibleDrawMode) {
-      btnBibleDrawMode.addEventListener('click', () => {
-        const nextTool = (this.pencilEngine.tool === 'select') ? 'highlighter' : this.pencilEngine.tool;
-        this.pencilEngine.selectTool(nextTool);
-        updateToolUI(nextTool);
-        this.showToast('🖍️ Modo Escrita & Marcador ativo.', 2000);
-      });
-    }
-
-    // Botão de colar citação na coluna de notas
-    const btnPasteBibleQuote = document.getElementById('btnPasteBibleQuote');
-    if (btnPasteBibleQuote) {
-      btnPasteBibleQuote.addEventListener('click', async () => {
-        let quoteText = this.lastCopiedBibleQuote;
-        if (!quoteText) {
-          try {
-            quoteText = await navigator.clipboard.readText();
-          } catch (e) {}
-        }
-        if (!quoteText) {
-          this.showToast('Selecione primeiro um texto bíblico ou toque no versículo para copiar!', 2500);
-          return;
-        }
-        this.pasteQuoteIntoNotes(quoteText);
-      });
     }
 
     // 2. Cores da Paleta Flutuante
@@ -7871,6 +7744,13 @@ class BStudyApp {
           selectionPill.dataset.selectedText = text;
         }
       } catch (err) {}
+      // Copiar automaticamente para a área de transferência do sistema
+      const book = this.bibleEngine.getCurrentBook();
+      const ch = this.bibleEngine.currentChapter;
+      const refTitle = `${book ? book.name : ''} ${ch}`;
+      const clipText = text.includes('—') ? text : `${text}\n— ${refTitle}`;
+      this.lastCopiedBibleQuote = clipText;
+      try { navigator.clipboard.writeText(clipText); } catch (e) {}
     };
 
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -7880,8 +7760,10 @@ class BStudyApp {
     }
 
     if (selectionPill) {
-      const doCopyToNotes = (text) => {
+      selectionPill.addEventListener('click', () => {
+        const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
         if (!text) return;
+
         const book = this.bibleEngine.getCurrentBook();
         const ch = this.bibleEngine.currentChapter;
         const refTitle = `${book ? book.name : ''} ${ch}`;
@@ -7890,7 +7772,6 @@ class BStudyApp {
         const formattedQuote = `<blockquote style="border-left: 3px solid #2563eb; padding-left: 10px; margin: 0 0 8px 0; color: #1e293b; font-style: italic; line-height: 1.5;">“${text}”</blockquote><div style="font-size: 12.5px; font-weight: 700; color: #2563eb; text-align: right;">— ${refTitle}</div>`;
         this.lastCopiedBibleQuote = `${text} — ${refTitle}`;
 
-        // Copiar também para o clipboard nativo do sistema
         try {
           navigator.clipboard.writeText(`${text}\n— ${refTitle}`);
         } catch (e) {}
@@ -7916,60 +7797,9 @@ class BStudyApp {
 
           this.saveCurrentNotesNow();
           this.showToast('✅ Citação bíblica colada nas Notas!', 2000);
-          setTimeout(() => {
-            selectionPill.style.display = 'none';
-            try { window.getSelection().removeAllRanges(); } catch (e) {}
-          }, 400);
-        }
-      };
-
-      const doCopyToClipboardOnly = (text) => {
-        if (!text) return;
-        const book = this.bibleEngine.getCurrentBook();
-        const ch = this.bibleEngine.currentChapter;
-        const refTitle = `${book ? book.name : ''} ${ch}`;
-        const fullClipText = text.includes('—') ? text : `${text}\n— ${refTitle}`;
-        this.lastCopiedBibleQuote = fullClipText;
-
-        try {
-          navigator.clipboard.writeText(fullClipText);
-        } catch (e) {
-          const ta = document.createElement('textarea');
-          ta.value = fullClipText;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          ta.remove();
-        }
-        this.showToast('✅ Texto bíblico copiado!', 2000);
-        setTimeout(() => {
           selectionPill.style.display = 'none';
-        }, 400);
-      };
-
-      const btnPillNotes = document.getElementById('btnPillCopyToNotes');
-      const btnPillClip = document.getElementById('btnPillCopyToClipboard');
-
-      if (btnPillNotes) {
-        btnPillNotes.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
-          doCopyToNotes(text);
-        });
-      }
-
-      if (btnPillClip) {
-        btnPillClip.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
-          doCopyToClipboardOnly(text);
-        });
-      }
-
-      selectionPill.addEventListener('click', (e) => {
-        if (e.target.closest('#btnPillCopyToNotes') || e.target.closest('#btnPillCopyToClipboard')) return;
-        const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
-        doCopyToNotes(text);
+          try { window.getSelection().removeAllRanges(); } catch (e) {}
+        }
       });
     }
 

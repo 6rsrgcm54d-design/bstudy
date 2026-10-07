@@ -1042,6 +1042,14 @@ class ApplePencilEngine {
   selectTool(tool) {
     this.tool = tool;
     this.cursorRing.style.display = 'none';
+
+    // Sincronizar classes ativas na folha de estudo
+    const sheet = document.getElementById('journalSheet');
+    if (sheet) {
+      sheet.classList.remove('tool-highlighter', 'tool-eraser', 'tool-pen', 'tool-select');
+      sheet.classList.add(`tool-${tool}`);
+    }
+
     if (this.drawCanvas) {
       if (tool === 'select') {
         this.drawCanvas.style.pointerEvents = 'none';

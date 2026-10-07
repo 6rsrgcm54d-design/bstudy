@@ -478,17 +478,6 @@ class BStudyApp {
       fpTools.forEach(b => {
         b.classList.toggle('active', b.dataset.tool === tool);
       });
-      const btnBibleSelectMode = document.getElementById('btnBibleSelectMode');
-      const btnBibleDrawMode = document.getElementById('btnBibleDrawMode');
-      if (btnBibleSelectMode && btnBibleDrawMode) {
-        if (tool === 'select') {
-          btnBibleSelectMode.classList.add('active');
-          btnBibleDrawMode.classList.remove('active');
-        } else {
-          btnBibleSelectMode.classList.remove('active');
-          btnBibleDrawMode.classList.add('active');
-        }
-      }
     };
 
     fpTools.forEach(btn => {
@@ -503,43 +492,6 @@ class BStudyApp {
       this.pencilEngine.onToolChange = (tool) => {
         updateToolUI(tool);
       };
-    }
-
-    // Botões de alternância direta no cabeçalho da Bíblia (Selecionar vs Desenhar/Anotar)
-    const btnBibleSelectMode = document.getElementById('btnBibleSelectMode');
-    const btnBibleDrawMode = document.getElementById('btnBibleDrawMode');
-    if (btnBibleSelectMode) {
-      btnBibleSelectMode.addEventListener('click', () => {
-        this.pencilEngine.selectTool('select');
-        updateToolUI('select');
-        this.showToast('👆 Modo Seleção ativo: Arraste para selecionar texto ou toque nos versículos.', 2500);
-      });
-    }
-    if (btnBibleDrawMode) {
-      btnBibleDrawMode.addEventListener('click', () => {
-        const nextTool = (this.pencilEngine.tool === 'select') ? 'highlighter' : this.pencilEngine.tool;
-        this.pencilEngine.selectTool(nextTool);
-        updateToolUI(nextTool);
-        this.showToast('🖍️ Modo Escrita & Marcador ativo.', 2000);
-      });
-    }
-
-    // Botão de colar citação na coluna de notas
-    const btnPasteBibleQuote = document.getElementById('btnPasteBibleQuote');
-    if (btnPasteBibleQuote) {
-      btnPasteBibleQuote.addEventListener('click', async () => {
-        let quoteText = this.lastCopiedBibleQuote;
-        if (!quoteText) {
-          try {
-            quoteText = await navigator.clipboard.readText();
-          } catch (e) {}
-        }
-        if (!quoteText) {
-          this.showToast('Selecione primeiro um texto bíblico ou toque no versículo para copiar!', 2500);
-          return;
-        }
-        this.pasteQuoteIntoNotes(quoteText);
-      });
     }
 
     // 2. Cores da Paleta Flutuante
@@ -1057,6 +1009,13 @@ class BStudyApp {
           selectionPill.dataset.selectedText = text;
         }
       } catch (err) {}
+      // Copiar automaticamente para a área de transferência do sistema
+      const book = this.bibleEngine.getCurrentBook();
+      const ch = this.bibleEngine.currentChapter;
+      const refTitle = `${book ? book.name : ''} ${ch}`;
+      const clipText = text.includes('—') ? text : `${text}\n— ${refTitle}`;
+      this.lastCopiedBibleQuote = clipText;
+      try { navigator.clipboard.writeText(clipText); } catch (e) {}
     };
 
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -1066,8 +1025,10 @@ class BStudyApp {
     }
 
     if (selectionPill) {
-      const doCopyToNotes = (text) => {
+      selectionPill.addEventListener('click', () => {
+        const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
         if (!text) return;
+
         const book = this.bibleEngine.getCurrentBook();
         const ch = this.bibleEngine.currentChapter;
         const refTitle = `${book ? book.name : ''} ${ch}`;
@@ -1076,7 +1037,6 @@ class BStudyApp {
         const formattedQuote = `<blockquote style="border-left: 3px solid #2563eb; padding-left: 10px; margin: 0 0 8px 0; color: #1e293b; font-style: italic; line-height: 1.5;">“${text}”</blockquote><div style="font-size: 12.5px; font-weight: 700; color: #2563eb; text-align: right;">— ${refTitle}</div>`;
         this.lastCopiedBibleQuote = `${text} — ${refTitle}`;
 
-        // Copiar também para o clipboard nativo do sistema
         try {
           navigator.clipboard.writeText(`${text}\n— ${refTitle}`);
         } catch (e) {}
@@ -1102,60 +1062,9 @@ class BStudyApp {
 
           this.saveCurrentNotesNow();
           this.showToast('✅ Citação bíblica colada nas Notas!', 2000);
-          setTimeout(() => {
-            selectionPill.style.display = 'none';
-            try { window.getSelection().removeAllRanges(); } catch (e) {}
-          }, 400);
-        }
-      };
-
-      const doCopyToClipboardOnly = (text) => {
-        if (!text) return;
-        const book = this.bibleEngine.getCurrentBook();
-        const ch = this.bibleEngine.currentChapter;
-        const refTitle = `${book ? book.name : ''} ${ch}`;
-        const fullClipText = text.includes('—') ? text : `${text}\n— ${refTitle}`;
-        this.lastCopiedBibleQuote = fullClipText;
-
-        try {
-          navigator.clipboard.writeText(fullClipText);
-        } catch (e) {
-          const ta = document.createElement('textarea');
-          ta.value = fullClipText;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          ta.remove();
-        }
-        this.showToast('✅ Texto bíblico copiado!', 2000);
-        setTimeout(() => {
           selectionPill.style.display = 'none';
-        }, 400);
-      };
-
-      const btnPillNotes = document.getElementById('btnPillCopyToNotes');
-      const btnPillClip = document.getElementById('btnPillCopyToClipboard');
-
-      if (btnPillNotes) {
-        btnPillNotes.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
-          doCopyToNotes(text);
-        });
-      }
-
-      if (btnPillClip) {
-        btnPillClip.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
-          doCopyToClipboardOnly(text);
-        });
-      }
-
-      selectionPill.addEventListener('click', (e) => {
-        if (e.target.closest('#btnPillCopyToNotes') || e.target.closest('#btnPillCopyToClipboard')) return;
-        const text = selectionPill.dataset.selectedText || (window.getSelection() ? window.getSelection().toString().trim() : '');
-        doCopyToNotes(text);
+          try { window.getSelection().removeAllRanges(); } catch (e) {}
+        }
       });
     }
 

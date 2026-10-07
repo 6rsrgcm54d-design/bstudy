@@ -2242,70 +2242,18 @@ html, body {
   -webkit-user-select: text !important;
 }
 
-/* Quando o modo de seleção pura de texto estiver ativo */
-body.tool-select-active .notes-canvas-container,
-body.tool-select-active .notes-drawing-canvas,
-body.tool-select-active .notes-elements-layer {
-  pointer-events: none !important;
+/* Quando a ferramenta NÃO for marcador nem borracha (ex: Caneta ou Selecionar),
+   a Coluna da Bíblia fica no topo (z-index: 15) para permitir toque e seleção de texto 100% nativos! */
+.journal-sheet:not(.tool-highlighter):not(.tool-eraser) .journal-bible-column {
+  position: relative;
+  z-index: 15 !important;
+  pointer-events: auto !important;
 }
 
-/* Switch no cabeçalho do capítulo bíblico */
-.bible-mode-switch {
-  display: inline-flex;
-  align-items: center;
-  background: #f1f5f9;
-  padding: 3px;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  gap: 2px;
-}
-
-.bible-mode-btn {
-  border: none;
-  background: transparent;
-  padding: 5px 12px;
-  border-radius: 16px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
-}
-
-.bible-mode-btn:hover {
-  color: #1e293b;
-}
-
-.bible-mode-btn.active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  font-weight: 700;
-}
-
-/* Botão de colar na coluna de notas */
-.notes-header-paste-btn {
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
-  color: #334155;
-  padding: 4px 10px;
-  border-radius: 14px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.15s ease;
-}
-
-.notes-header-paste-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #0f172a;
+/* Quando for marcador ou borracha, a Bíblia fica sob o canvas para permitir sublinhar a direito */
+.journal-sheet.tool-highlighter .journal-bible-column,
+.journal-sheet.tool-eraser .journal-bible-column {
+  z-index: 1 !important;
 }
 
 /* Coluna de Notas: O papel cobre 100% de todo o scroll da página */
@@ -2393,38 +2341,25 @@ body.tool-select-active .notes-elements-layer {
   display: none;
   background: #0f172a;
   color: #ffffff;
-  padding: 4px 6px;
+  padding: 8px 16px;
   border-radius: 24px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
   align-items: center;
-  gap: 4px;
+  gap: 7px;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
   white-space: nowrap;
 }
 
-.bible-selection-pill .pill-action-btn {
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  padding: 6px 11px;
-  border-radius: 18px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background 0.15s ease;
-}
-
-.bible-selection-pill .pill-action-btn:hover,
-.bible-selection-pill .pill-action-btn:active {
-  background: rgba(255, 255, 255, 0.18);
+.bible-selection-pill:hover,
+.bible-selection-pill:active {
+  background: #1e293b;
+  transform: scale(1.05);
 }
 
 .journal-verse-sup {
